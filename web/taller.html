@@ -207,6 +207,85 @@ const VIEWS = ['inicio', 'cotizaciones', 'clientes', 'vehiculos', 'personal', 'a
 const ESTADOS = { borrador: 'Borrador', enviada: 'Enviada', aprobada: 'Aprobada', rechazada: 'Rechazada' };
 const TIPOS = { mano_obra: 'Mano de obra', repuesto: 'Repuesto', otro: 'Otro' };
 const ROLES = { admin: 'Administrador', recepcion: 'Recepción', mecanico: 'Mecánico' };
+// Marcas y modelos (actuales y anteriores que aún llegan al taller). "Otra…" permite escribir lo que falte.
+const CATALOGO = {
+  'Acura': 'ADX|Integra|MDX|NSX|RDX|TLX|ZDX',
+  'Alfa Romeo': 'Giulia|Giulietta|Junior|MiTo|Stelvio|Tonale',
+  'Aston Martin': 'DB11|DB12|DBS|DBX|Vantage',
+  'Audi': 'A1|A3|A4|A5|A6|A7|A8|e-tron GT|Q2|Q3|Q4 e-tron|Q5|Q7|Q8|Q8 e-tron|R8|RS3|RS6|S3|TT',
+  'BAIC': 'BJ40|BJ60|D20|U5 Plus|X35|X55',
+  'Bentley': 'Bentayga|Continental GT|Flying Spur',
+  'BMW': 'i3|i4|i5|i7|iX|iX1|iX3|M2|M3|M4|M5|Serie 1|Serie 2|Serie 2 Gran Coupé|Serie 3|Serie 4|Serie 5|Serie 7|Serie 8|X1|X2|X3|X4|X5|X6|X7|XM|Z4',
+  'Buick': 'Enclave|Encore|Encore GX|Envision|Envista',
+  'BYD': 'Atto 2|Atto 3|Dolphin|Dolphin Mini|e2|F3|Han|King|Qin Plus|Seal|Seal U|Sealion 6|Sealion 7|Shark|Song Plus|Song Pro|Tang|Yuan Plus|Yuan Pro',
+  'Cadillac': 'CT4|CT5|Escalade|Escalade IQ|Lyriq|Optiq|XT4|XT5|XT6',
+  'Changan': 'Alsvin|CS15|CS35 Plus|CS55 Plus|CS75 Plus|CS85|Deepal S07|Hunter|Uni-K|Uni-T|Uni-V',
+  'Chery': 'Arrizo 5|Arrizo 8|QQ|Tiggo 2|Tiggo 2 Pro|Tiggo 3|Tiggo 4|Tiggo 4 Pro|Tiggo 7|Tiggo 7 Pro|Tiggo 8|Tiggo 8 Pro',
+  'Chevrolet': 'Astra|Aveo|Beat|Blazer|Blazer EV|Bolt EUV|Bolt EV|Camaro|Captiva|Cavalier|Chevy|Cobalt|Colorado|Corsa|Corvette|Cruze|D-Max|Epica|Equinox|Equinox EV|Grand Vitara|Groove|Joy|Luv|Luv D-Max|Malibu|Montana|N300|N400|NHR|NPR|Onix|Optra|Orlando|Prisma|S10|Sail|Silverado|Silverado EV|Sonic|Spark|Spark GT|Spin|Suburban|Tahoe|Tornado|Tracker|Trailblazer|Traverse|Trax|Vitara|Zafira',
+  'Chrysler': '200|300|Pacifica|PT Cruiser|Sebring|Town & Country|Voyager',
+  'Citroën': 'Ami|Basalt|Berlingo|C-Elysée|C3|C3 Aircross|C4|C4 Cactus|C4 X|C5 Aircross|C5 X|ë-C4|Jumper|Jumpy|Xsara Picasso',
+  'Cupra': 'Ateca|Born|Formentor|León|Tavascan|Terramar',
+  'Daewoo': 'Cielo|Espero|Lanos|Matiz|Nubira|Racer|Tico',
+  'DFSK': 'C31|C35|C37|Glory 500|Glory 560|Glory 580|Glory 600|K01',
+  'Dodge': 'Attitude|Avenger|Caliber|Challenger|Charger|Dart|Durango|Grand Caravan|Hornet|Journey|Neon|Nitro|Viper',
+  'DS': 'DS 3|DS 4|DS 7|DS 9',
+  'Ferrari': '296|812|Purosangue|Roma|SF90',
+  'Fiat': '500|500e|500X|600|Argo|Cronos|Doblò|Ducato|Fastback|Fiorino|Grand Siena|Mobi|Palio|Panda|Pulse|Punto|Scudo|Siena|Strada|Tipo|Titano|Toro|Uno',
+  'Ford': 'Bronco|Bronco Sport|Courier|EcoSport|Edge|Escape|Everest|Expedition|Explorer|F-150|F-150 Lightning|F-250|F-350|Fiesta|Figo|Focus|Fusion|Ka|Kuga|Laser|Maverick|Mondeo|Mustang|Mustang Mach-E|Puma|Ranger|Taurus|Territory|Tourneo|Transit|Transit Custom',
+  'Foton': 'Aumark|Gratour|Tunland|Tunland G7|View CS2',
+  'GAC': 'Aion V|Aion Y|Emkoo|Emzoom|GA4|GA6|GN8|GS3|GS4|GS8',
+  'Geely': 'Azkarra|Cityray|Coolray|Emgrand|EX5|Geometry C|GX3 Pro|Monjaro|Okavango|Starray|Tugella',
+  'Genesis': 'G70|G80|G90|GV60|GV70|GV80',
+  'GMC': 'Acadia|Canyon|Hummer EV|Sierra|Terrain|Yukon',
+  'Great Wall': 'Poer|Wingle 5|Wingle 7',
+  'Haval': 'Dargo|H2|H6|H9|Jolion',
+  'Hino': 'Serie 300|Serie 500',
+  'Honda': 'Accord|BR-V|City|Civic|Civic Type R|CR-V|CR-Z|e:Ny1|Element|Fit|HR-V|Insight|Jazz|Legend|Odyssey|Passport|Pilot|Prologue|Ridgeline|WR-V|ZR-V',
+  'Hyundai': 'Accent|Atos|Azera|Bayon|Casper|Creta|Elantra|Exter|Galloper|Getz|Grand i10|Grand Santa Fe|H-1|H100|HB20|i10|i20|i30|i30 N|Inster|Ioniq|Ioniq 5|Ioniq 6|Ioniq 9|Kona|Kona Eléctrico|Matrix|Palisade|Porter|Santa Cruz|Santa Fe|Sonata|Staria|Terracan|Tiburon|Tucson|Veloster|Venue|Verna',
+  'Infiniti': 'Q50|Q60|QX50|QX55|QX60|QX80',
+  'Isuzu': 'D-Max|FRR|MU-X|NHR|NKR|NPR|NQR|Rodeo|Trooper',
+  'Iveco': 'Daily|Tector',
+  'JAC': 'E10X|J7|JS2|JS3|JS4|JS6|JS8|Sunray|T6|T8|T9|X200',
+  'Jaecoo': 'J7|J8',
+  'Jaguar': 'E-Pace|F-Pace|F-Type|I-Pace|XE|XF|XJ',
+  'Jeep': 'Avenger|Cherokee|Commander|Compass|Gladiator|Grand Cherokee|Grand Cherokee L|Grand Wagoneer|Liberty|Patriot|Recon|Renegade|Wagoneer|Wrangler',
+  'Jetour': 'Dashing|T2|Traveller|X70|X70 Plus|X90',
+  'JMC': 'Grand Avenue|Touring|Vigus',
+  'KGM (SsangYong)': 'Actyon|Korando|Kyron|Musso|Rexton|Stavic|Tivoli|Torres',
+  'Kia': 'Cadenza|Carens|Carnival|Ceed|Cerato|EV3|EV5|EV6|EV9|Forte|K3|K4|K4 Hatchback|K5|K8|Mohave|Niro|Optima|Pegas|Picanto|ProCeed|Rio|Rondo|Sedona|Seltos|Sonet|Sorento|Soluto|Soul|Sportage|Stinger|Stonic|Tasman|Telluride|Venga|XCeed',
+  'Lada': 'Granta|Niva|Niva Legend|Samara|Vesta',
+  'Lamborghini': 'Huracán|Revuelto|Temerario|Urus',
+  'Land Rover': 'Defender|Discovery|Discovery Sport|Freelander|Range Rover|Range Rover Evoque|Range Rover Sport|Range Rover Velar',
+  'Lexus': 'ES|GX|IS|LBX|LC|LM|LS|LX|NX|RC|RX|RZ|TX|UX',
+  'Lincoln': 'Aviator|Corsair|MKZ|Nautilus|Navigator',
+  'Mahindra': 'Bolero|KUV100|Pik Up|Scorpio|Scorpio N|Thar|XUV 3XO|XUV300|XUV500|XUV700',
+  'Maserati': 'Ghibli|GranTurismo|Grecale|Levante|MC20|Quattroporte',
+  'Mazda': '323|626|Allegro|B2200|B2600|BT-50|CX-3|CX-30|CX-5|CX-50|CX-60|CX-70|CX-80|CX-90|Demio|Mazda2|Mazda2 Sedán|Mazda3|Mazda3 Sedán|Mazda5|Mazda6|MX-30|MX-5|RX-8|Tribute',
+  'Mercedes-Benz': 'AMG GT|Citan|Clase A|Clase B|Clase C|Clase CLA|Clase CLE|Clase CLS|Clase E|Clase G|Clase GLA|Clase GLB|Clase GLC|Clase GLE|Clase GLK|Clase GLS|Clase ML|Clase S|Clase SL|Clase V|Clase X|EQA|EQB|EQE|EQS|Sprinter|Vito',
+  'MG': 'Cyberster|Extender|HS|Marvel R|MG GT|MG3|MG4|MG5|MG6|MG7|One|RX5|RX8|ZS|ZS EV',
+  'Mini': 'Aceman|Cabrio|Clubman|Cooper|Cooper S|Countryman|Paceman',
+  'Mitsubishi': 'ASX|Eclipse Cross|Galant|L200|Lancer|Mirage|Mirage G4|Montero|Montero Sport|Nativa|Outlander|Outlander PHEV|Pajero|Pajero Sport|Space Star|Triton|Xforce|Xpander',
+  'Nissan': 'Almera|Altima|Ariya|D21|Frontier|GT-R|Juke|Kicks|Leaf|Magnite|March|Micra|Murano|Navara|Note|NP300|Pathfinder|Patrol|Primera|Qashqai|Rogue|Sentra|Sunny|Terrano|Tiida|Tsuru|Urvan|Versa|X-Terra|X-Trail|Z',
+  'Omoda': 'C5|E5',
+  'Opel': 'Astra|Combo|Corsa|Crossland|Frontera|Grandland|Insignia|Mokka|Vivaro|Zafira',
+  'Peugeot': '108|2008|206|207|208|3008|301|307|308|405|406|407|408|5008|508|Boxer|e-2008|e-208|Expert|Landtrek|Partner|Rifter|Traveller',
+  'Polestar': 'Polestar 2|Polestar 3|Polestar 4',
+  'Porsche': '718 Boxster|718 Cayman|911|Cayenne|Macan|Panamera|Taycan',
+  'RAM': '700|1000|1500|2500|3500|ProMaster|Rampage|V700',
+  'Renault': '5 E-Tech|Alaskan|Arkana|Austral|Captur|Clio|Duster|Duster Oroch|Espace|Express|Fluence|Kangoo|Kardian|Koleos|Kwid|Laguna|Logan|Master|Mégane|Mégane E-Tech|Oroch|Rafale|Renault 18|Renault 4|Renault 9|Sandero|Sandero Stepway|Scénic|Stepway|Symbol|Trafic|Twingo|Zoe',
+  'Rolls-Royce': 'Cullinan|Ghost|Phantom|Spectre|Wraith',
+  'Seat': 'Alhambra|Arona|Ateca|Córdoba|Ibiza|León|Tarraco|Toledo',
+  'Škoda': 'Elroq|Enyaq|Fabia|Kamiq|Karoq|Kodiaq|Kushaq|Octavia|Rapid|Scala|Slavia|Superb',
+  'Subaru': 'Ascent|BRZ|Crosstrek|Forester|Impreza|Legacy|Outback|Solterra|WRX|XV',
+  'Suzuki': 'Alto|APV|Baleno|Carry|Celerio|Ciaz|Dzire|e Vitara|Ertiga|Fronx|Grand Vitara|Ignis|Jimny|Kizashi|S-Cross|S-Presso|Samurai|Swift|SX4|Vitara|XL7',
+  'Tesla': 'Cybertruck|Model 3|Model S|Model X|Model Y',
+  'Toyota': '4Runner|Agya|Auris|Avanza|bZ4X|C-HR|Camry|Celica|Corolla|Corolla Cross|Corolla Hatchback|Crown|Etios|FJ Cruiser|Fortuner|GR Corolla|GR Supra|GR Yaris|GR86|Grand Highlander|Hiace|Highlander|Hilux|Land Cruiser|Land Cruiser Prado|Prius|Prius Plug-In Hybrid|Raize|RAV4|Rush|Sequoia|Sienna|Starlet|SW4|Tacoma|Tercel|Tundra|Venza|Yaris|Yaris Cross|Yaris Sedán',
+  'Volkswagen': 'Amarok|Arteon|Atlas|Atlas Cross Sport|Beetle|Bora|Caddy|Combi|Crafter|CrossFox|Fox|Gol|Golf|Golf GTI|Golf R|ID.3|ID.4|ID.Buzz|Jetta|Nivus|Passat|Polo|Saveiro|Scirocco|Sedán (Vocho)|T-Cross|T-Roc|Taos|Tera|Teramont|Tiguan|Touareg|Touran|Transporter|Up!|Vento|Virtus|Voyage',
+  'Volvo': 'C40|EC40|EX30|EX40|EX90|S60|S90|V40|V60|V90|XC40|XC60|XC90',
+};
+const MARCAS = Object.keys(CATALOGO).sort((a, b) => a.localeCompare(b, 'es'));
+const modelosDe = (marca) => (CATALOGO[marca] ? CATALOGO[marca].split('|') : []).sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+const OTRA = '__otra';
 
 // ---------- Helpers ----------
 const $ = (s, r = document) => r.querySelector(s);
@@ -576,8 +655,8 @@ function editVehicle(v, clienteId, after) {
   const sheet = openSheet(v ? 'Editar vehículo' : 'Nuevo vehículo', `<div class="grid2">
     ${select('f-cliente', 'Propietario', opts, x.clienteId, { req: true, span: true })}
     ${input('f-placa', 'Placa', x.placa, { req: true, attrs: 'style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.1em"' })}
-    ${input('f-marca', 'Marca', x.marca, { req: true })}
-    ${input('f-modelo', 'Modelo', x.modelo, { req: true })}
+    <label class="field"><span>Marca *</span><select id="f-marca-sel"></select><input id="f-marca-otra" placeholder="Escribe la marca" hidden></label>
+    <label class="field"><span>Modelo *</span><select id="f-modelo-sel"></select><input id="f-modelo-otro" placeholder="Escribe el modelo" hidden></label>
     ${input('f-anio', 'Año', x.anio, { type: 'number', attrs: 'min="1900" max="2100"' })}
     ${input('f-color', 'Color', x.color)}
     ${input('f-km', 'Kilometraje', x.km, { type: 'number', attrs: 'min="0"' })}
@@ -585,9 +664,31 @@ function editVehicle(v, clienteId, after) {
     ${input('f-notas', 'Notas', x.notas, { area: true, span: true })}</div><p class="err" id="f-err"></p>`,
   `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar vehículo</button>`);
   $('[data-cancel]', sheet).onclick = closeSheet;
+  // Marca → modelos: each list ends with "Otra…", which reveals a text box for anything not listed.
+  const mSel = $('#f-marca-sel', sheet), mOtra = $('#f-marca-otra', sheet), moSel = $('#f-modelo-sel', sheet), moOtro = $('#f-modelo-otro', sheet);
+  const marcaKnown = !x.marca || MARCAS.includes(x.marca);
+  mSel.innerHTML = `<option value="">Selecciona la marca…</option>${MARCAS.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('')}<option value="${OTRA}">Otra marca…</option>`;
+  mSel.value = x.marca ? (marcaKnown ? x.marca : OTRA) : '';
+  mOtra.value = marcaKnown ? '' : x.marca;
+  const fillModelos = (selected) => {
+    const marca = mSel.value;
+    const list = marca === OTRA ? [] : modelosDe(marca);
+    mOtra.hidden = marca !== OTRA;
+    moSel.disabled = !marca;
+    moSel.innerHTML = !marca ? '<option value="">Primero elige la marca</option>'
+      : `<option value="">${list.length ? 'Selecciona el modelo…' : 'Escribe el modelo abajo'}</option>${list.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('')}<option value="${OTRA}">Otro modelo…</option>`;
+    if (selected && list.includes(selected)) { moSel.value = selected; moOtro.value = ''; }
+    else if (selected) { moSel.value = OTRA; moOtro.value = selected; }
+    else if (marca === OTRA) moSel.value = OTRA;
+    moOtro.hidden = moSel.value !== OTRA;
+  };
+  fillModelos(x.modelo);
+  mSel.onchange = () => { fillModelos(''); (mSel.value === OTRA ? mOtra : moSel).focus(); };
+  moSel.onchange = () => { moOtro.hidden = moSel.value !== OTRA; if (!moOtro.hidden) moOtro.focus(); };
+  const pick = (sel, other) => (sel.value === OTRA ? other.value.trim() : sel.value);
   $('[data-save]', sheet).onclick = async (e) => {
     const placa = val(sheet, 'f-placa').toUpperCase().replace(/\s+/g, ' ');
-    const d = { clienteId: val(sheet, 'f-cliente'), placa, marca: val(sheet, 'f-marca'), modelo: val(sheet, 'f-modelo'),
+    const d = { clienteId: val(sheet, 'f-cliente'), placa, marca: pick(mSel, mOtra), modelo: pick(moSel, moOtro),
       anio: val(sheet, 'f-anio') ? parseInt(val(sheet, 'f-anio'), 10) : '', color: val(sheet, 'f-color'),
       km: val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '', vin: val(sheet, 'f-vin'), notas: val(sheet, 'f-notas'), creado: x.creado || new Date().toISOString() };
     if (!d.clienteId || !d.placa || !d.marca || !d.modelo) return void ($('#f-err').textContent = 'Completa propietario, placa, marca y modelo.');
