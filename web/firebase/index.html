@@ -216,7 +216,7 @@ img { max-width: 100%; }
 /* Phone: brand + menu button; sections open as a list below the bar. */
 .menu-btn { display: none; align-items: center; gap: 8px; margin: 0 0 10px auto; background: none; border: 1px solid rgb(255 255 255 / .28); color: var(--ink-bar-fg); border-radius: var(--radius); padding: 7px 12px; cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 1rem; letter-spacing: .04em; text-transform: uppercase; }
 .nav-wrap { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 0; }
-@media (max-width: 760px) {
+@media (max-width: 1180px) {
   .topbar .wrap { gap: 10px; }
   .brand { flex: 1; }
   .menu-btn { display: inline-flex; }
@@ -230,11 +230,48 @@ img { max-width: 100%; }
 .theme-btn { order: 3; flex-shrink: 0; display: inline-grid; place-items: center; width: 38px; height: 38px; margin-bottom: 10px; background: none; border: 1px solid rgb(255 255 255 / .28); color: var(--ink-bar-fg); border-radius: var(--radius); cursor: pointer; }
 .theme-btn:hover, .menu-btn:hover { border-color: rgb(255 255 255 / .6); }
 .nav-wrap { order: 2; }
-@media (max-width: 760px) {
+@media (max-width: 1180px) {
   .theme-btn { order: 1; margin-left: auto; }
   .menu-btn { order: 2; margin-left: 0; }
   .nav-wrap { order: 3; }
 }
+/* Work orders */
+.ot-section { display: flex; flex-direction: column; gap: 12px; }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.issues { margin: 0; padding-left: 18px; color: var(--bad); }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.thumb { position: relative; display: block; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); cursor: pointer; aspect-ratio: 4 / 3; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb.firma { background: #fff; }
+.thumb.firma img { object-fit: contain; }
+.thumb .x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgb(0 0 0 / .65); color: #fff; cursor: pointer; font-size: .8rem; }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgb(0 0 0 / .85); display: grid; place-items: center; padding: 16px; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: 85vh; border-radius: var(--radius); background: #fff; }
+.lightbox .btn { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); }
+.fuel { display: inline-flex; gap: 2px; vertical-align: -2px; }
+.fuel i { width: 9px; height: 14px; border: 1px solid var(--muted); border-radius: 2px; }
+.fuel i.on { background: var(--accent); border-color: var(--accent); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.seg button { border: 0; border-right: 1px solid var(--line); background: none; padding: 8px 12px; cursor: pointer; color: var(--fg); font: inherit; min-height: 40px; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg.small button { padding: 6px 10px; font-size: .85rem; min-height: 36px; }
+.seg .o-ok[aria-pressed="true"] { background: var(--ok); color: var(--surface); }
+.seg .o-mal[aria-pressed="true"] { background: var(--bad); color: var(--surface); }
+.seg .o-na[aria-pressed="true"] { background: var(--muted); color: var(--surface); }
+.checklist { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.check-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.check-row:last-child { border-bottom: 0; }
+.sign-pad { width: 100%; height: 170px; display: block; background: #fff; border: 1px dashed var(--muted); border-radius: var(--radius); touch-action: none; }
+.sign-saved { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; margin-bottom: 8px; }
+.sign-saved img { max-height: 120px; display: block; margin: 0 auto; }
+.pay-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto; gap: 10px; align-items: end; }
+@media (max-width: 640px) { .pay-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .pay-form .btn { grid-column: 1 / -1; } }
+.timeline { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: .92rem; }
+.public-wrap { max-width: 760px; margin: 0 auto; }
+.topbar .wrap { max-width: 1400px; }
+@media (max-width: 480px) { .hide-sm { display: none; } }
+.ok-notice { background: var(--ok-soft); color: var(--ok); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -256,8 +293,10 @@ img { max-width: 100%; }
     <nav class="tabs" id="tabs" aria-label="Secciones">
       <button class="tab" data-view="inicio">Inicio</button>
       <button class="tab" data-view="cotizaciones">Cotizaciones</button>
+      <button class="tab" data-view="ordenes">Órdenes</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="vehiculos">Vehículos</button>
+      <button class="tab" data-view="reportes">Reportes</button>
       <button class="tab" data-view="personal">Usuarios</button>
       <button class="tab" data-view="ajustes">Ajustes</button>
     </nav>
@@ -286,13 +325,13 @@ const FIREBASE_CONFIG = {
 const S = {
   db: null, user: null, ready: false, offline: false,
   canWrite: true, canAdmin: false, canDelete: false, myId: null, me: null,
-  clientes: [], vehiculos: [], cotizaciones: [], personal: [],
+  clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [],
   config: { nombre: 'Mi Taller', telefono: '', correo: '', direccion: '', moneda: 'USD', impuesto: 0, validez: 15, pie: 'Gracias por confiar en nosotros.' },
   loaded: new Set(),
   view: 'inicio',
   q: { cotizaciones: '', estado: '', clientes: '', vehiculos: '' },
 };
-const VIEWS = ['inicio', 'cotizaciones', 'clientes', 'vehiculos', 'personal', 'ajustes'];
+const VIEWS = ['inicio', 'cotizaciones', 'ordenes', 'clientes', 'vehiculos', 'reportes', 'personal', 'ajustes'];
 const ESTADOS = { borrador: 'Borrador', enviada: 'Enviada', aprobada: 'Aprobada', rechazada: 'Rechazada' };
 const TIPOS = { mano_obra: 'Mano de obra', repuesto: 'Repuesto', otro: 'Otro' };
 const ROLES = { admin: 'Administrador', recepcion: 'Recepción', mecanico: 'Mecánico' };
@@ -546,7 +585,8 @@ function openSheet(title, body, foot = '', onRefresh = null) {
   $('[data-close]', layer).onclick = closeSheet;
   $('.scrim', layer).addEventListener('mousedown', (e) => { if (e.target.classList.contains('scrim')) closeSheet(); });
   sheetRefresh = onRefresh;
-  const first = $('.sheet-body input, .sheet-body select, .sheet-body textarea', layer);
+  // Forms start on their first field; record views don't, so their live updates keep showing.
+  const first = !onRefresh && $('.sheet-body input, .sheet-body select, .sheet-body textarea', layer);
   if (first) first.focus();
   return $('.sheet', layer);
 }
@@ -615,6 +655,7 @@ views.inicio = {
   shell: () => `${banner()}<div class="head"><div><h1 id="hello">Inicio</h1><p class="sub">Resumen del taller al día de hoy.</p></div>
     <div class="toolbar">${S.canWrite ? '<button class="btn primary" data-act="new-quote">+ Nueva cotización</button>' : ''}</div></div>
     <div data-part="stats"></div>
+    <section class="panel" style="margin-bottom:16px"><div class="panel-pad head" style="margin:0;padding-bottom:0"><h2>En el taller</h2>${S.canWrite ? '<button class="btn small" data-act="new-order">+ Nueva orden</button>' : ''}</div><div data-part="taller"></div></section>
     <div class="two-col"><section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Cotizaciones recientes</h2></div><div data-part="recent"></div></section>
     <section class="panel panel-pad"><h2 style="margin-bottom:10px">Por responder</h2><div data-part="pending"></div></section></div>`,
   fill(root) {
@@ -624,13 +665,14 @@ views.inicio = {
     const mes = today().slice(0, 7);
     const aprobMes = qs.filter((q) => q.estado === 'aprobada' && (q.respondida || q.creada || '').slice(0, 7) === mes).reduce((s, q) => s + totals(q).total, 0);
     $('[data-part=stats]', root).innerHTML = `<div class="stats">
-      <div class="stat"><span class="label">Clientes</span><span class="value">${S.clientes.length}</span></div>
-      <div class="stat"><span class="label">Vehículos</span><span class="value">${S.vehiculos.length}</span></div>
-      <div class="stat"><span class="label">Borradores</span><span class="value">${count('borrador')}</span></div>
-      <div class="stat"><span class="label">Esperando respuesta</span><span class="value">${count('enviada')}</span></div>
-      <div class="stat"><span class="label">Aprobadas</span><span class="value">${count('aprobada')}</span></div>
-      <div class="stat hl"><span class="label">Aprobado este mes</span><span class="value" style="font-size:1.5rem">${money(aprobMes)}</span><span class="muted" style="font-size:.82rem">Total histórico ${money(aprob)}</span></div>
+      <div class="stat"><span class="label">En el taller</span><span class="value">${S.ordenes.filter(activa).length}</span></div>
+      <div class="stat"><span class="label">Listos para entregar</span><span class="value">${S.ordenes.filter((o) => o.estado === 'terminado').length}</span></div>
+      <div class="stat"><span class="label">Cotizaciones por responder</span><span class="value">${count('enviada')}</span></div>
+      <div class="stat"><span class="label">Por cobrar</span><span class="value" style="font-size:1.5rem">${money(S.ordenes.filter((o) => o.estado !== 'cancelado').reduce((s, o) => s + otSaldo(o), 0))}</span></div>
+      <div class="stat hl"><span class="label">Cobrado este mes</span><span class="value" style="font-size:1.5rem">${money(S.ordenes.flatMap((o) => o.pagos || []).filter((p) => localMonth(p.fecha) === mes).reduce((s, p) => s + p.monto, 0))}</span></div>
+      <div class="stat"><span class="label">Aprobado este mes</span><span class="value" style="font-size:1.5rem">${money(aprobMes)}</span><span class="muted" style="font-size:.82rem">Total histórico ${money(aprob)}</span></div>
     </div>`;
+    $('[data-part=taller]', root).innerHTML = orderTable(S.ordenes.filter(activa), loading() ? 'Cargando órdenes…' : 'No hay vehículos en el taller ahora mismo.');
     $('[data-part=recent]', root).innerHTML = quoteTable(qs.slice(0, 8), loading() ? 'Cargando cotizaciones…' : null);
     const pend = qs.filter((q) => q.estado === 'enviada').sort((a, b) => (a.validez || '').localeCompare(b.validez || ''));
     $('[data-part=pending]', root).innerHTML = pend.length ? `<div style="display:flex;flex-direction:column;gap:10px">${pend.slice(0, 8).map((q) => `
@@ -774,14 +816,16 @@ function renderView(force) {
 
 // Global clicks for rows and actions
 $('#view').addEventListener('click', (e) => {
-  const t = e.target.closest('[data-open-quote],[data-open-client],[data-open-vehicle],[data-open-staff],[data-act]');
+  const t = e.target.closest('[data-open-quote],[data-open-order],[data-open-client],[data-open-vehicle],[data-open-staff],[data-act]');
   if (!t) return;
   if (t.dataset.openQuote) return showQuote(t.dataset.openQuote);
+  if (t.dataset.openOrder) return showOrder(t.dataset.openOrder);
   if (t.dataset.openClient) return showClient(t.dataset.openClient);
   if (t.dataset.openVehicle) return showVehicle(t.dataset.openVehicle);
   if (t.dataset.openStaff) return editStaff(byId(S.personal, t.dataset.openStaff));
   const a = t.dataset.act;
   if (a === 'new-quote') editQuote(null);
+  if (a === 'new-order') editOrder(null);
   if (a === 'new-client') editClient(null);
   if (a === 'new-vehicle') editVehicle(null);
   if (a === 'new-staff') editStaff(null);
@@ -819,6 +863,7 @@ function showClient(id) {
     if (!c) { closeSheet(); return; }
     const vs = S.vehiculos.filter((v) => v.clienteId === id);
     const qs = S.cotizaciones.filter((q) => q.clienteId === id);
+    const os = S.ordenes.filter((o) => o.clienteId === id);
     const sheet = $('#layer .sheet') && sheetRefresh === draw ? $('#layer .sheet') : null;
     const body = `<dl class="dl">
       <dt>Documento</dt><dd>${esc(c.documento || '—')}</dd><dt>WhatsApp</dt><dd class="mono">${esc(c.telefono || '—')}</dd>
@@ -835,7 +880,7 @@ function showClient(id) {
     $('[data-edit]', s).onclick = () => editClient(c, () => showClient(id));
     $('[data-quote]', s).onclick = () => editQuote(null, { clienteId: id });
     if ($('[data-del]', s)) $('[data-del]', s).onclick = async () => {
-      if (vs.length || qs.length) { toast('No se puede eliminar: el cliente tiene vehículos o cotizaciones.'); return; }
+      if (vs.length || qs.length || os.length) { toast('No se puede eliminar: el cliente tiene vehículos, cotizaciones u órdenes.'); return; }
       if (!(await ask(`¿Eliminar al cliente ${c.nombre}?`))) return;
       try { await remove('clientes', id); closeSheet(); toast('Cliente eliminado'); } catch (err) { toast(dbErr(err)); }
     };
@@ -923,18 +968,29 @@ function editVehicle(v, clienteId, after) {
     catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
   };
 }
+// Delivered work on a vehicle, newest first: date, mileage at reception and the jobs from its quote.
+function serviceHistory(os) {
+  if (!os.length) return '<div class="empty"><span>Este vehículo aún no tiene órdenes de trabajo.</span></div>';
+  return `<div class="table-scroll"><table><thead><tr><th>Orden</th><th>Ingreso</th><th>Km</th><th>Trabajos</th><th>Estado</th><th class="num">Total</th></tr></thead><tbody>
+    ${os.map((o) => { const q = otQuote(o); return `<tr class="row" data-open-order="${esc(o.id)}"><td class="mono strong">${esc(o.numero)}</td><td class="muted">${fdate(o.creada)}</td>
+      <td class="mono">${o.recepcion?.km !== '' && o.recepcion?.km != null ? Number(o.recepcion.km).toLocaleString('es') : '—'}</td>
+      <td>${esc(q ? q.items.filter((i) => i.tipo === 'mano_obra').map((i) => i.desc).join(', ') || q.items.map((i) => i.desc).join(', ') : o.motivo || '—')}</td>
+      <td>${otPill(o)}</td><td class="num">${q ? money(totals(q).total) : '—'}</td></tr>`; }).join('')}</tbody></table></div>`;
+}
 function showVehicle(id) {
   const draw = () => {
     const v = vehiculo(id);
     if (!v) { closeSheet(); return; }
     const c = cliente(v.clienteId);
     const qs = S.cotizaciones.filter((q) => q.vehiculoId === id);
+    const os = S.ordenes.filter((o) => o.vehiculoId === id);
     const body = `${vehicleLook(v)}<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">${plate(v.placa)}<span class="strong" style="font-size:1.1rem">${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</span></div>
       <dl class="dl"><dt>Propietario</dt><dd>${c ? `<a href="#clientes" data-goto-client="${esc(c.id)}">${esc(c.nombre)}</a>` : '—'}</dd>
       <dt>Color</dt><dd>${esc(v.color || '—')}</dd><dt>Kilometraje</dt><dd class="mono">${v.km !== '' && v.km != null ? Number(v.km).toLocaleString('es') + ' km' : '—'}</dd>
       <dt>VIN / serie</dt><dd class="mono">${esc(v.vin || '—')}</dd><dt>Notas</dt><dd>${esc(v.notas || '—')}</dd></dl>
+      <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de servicios</h2></div>${serviceHistory(os)}</section>
       <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de cotizaciones</h2></div>${quoteTable(qs, 'Sin cotizaciones para este vehículo')}</section>`;
-    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar</button><button class="btn primary" data-quote>+ Cotización</button>` : '';
+    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar</button><button class="btn" data-quote>+ Cotización</button><button class="btn primary" data-order>+ Orden</button>` : '';
     const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
     const s = existing || openSheet(`Vehículo ${v.placa}`, body, foot, draw);
     if (existing) $('.sheet-body', s).innerHTML = body;
@@ -942,8 +998,9 @@ function showVehicle(id) {
     if (!S.canWrite) return;
     $('[data-edit]', s).onclick = () => editVehicle(v, null, () => showVehicle(id));
     $('[data-quote]', s).onclick = () => editQuote(null, { clienteId: v.clienteId, vehiculoId: id });
+    $('[data-order]', s).onclick = () => editOrder(null, { clienteId: v.clienteId, vehiculoId: id });
     if ($('[data-del]', s)) $('[data-del]', s).onclick = async () => {
-      if (qs.length) { toast('No se puede eliminar: el vehículo tiene cotizaciones.'); return; }
+      if (qs.length || os.length) { toast('No se puede eliminar: el vehículo tiene cotizaciones u órdenes.'); return; }
       if (!(await ask(`¿Eliminar el vehículo ${v.placa}?`))) return;
       try { await remove('vehiculos', id); closeSheet(); toast('Vehículo eliminado'); } catch (err) { toast(dbErr(err)); }
     };
@@ -954,6 +1011,7 @@ function showVehicle(id) {
 // Sheet bodies contain quote tables; open quotes from inside a sheet too.
 $('#layer').addEventListener('click', (e) => {
   const q = e.target.closest('[data-open-quote]'); if (q) return showQuote(q.dataset.openQuote);
+  const o = e.target.closest('[data-open-order]'); if (o) return showOrder(o.dataset.openOrder);
   const v = e.target.closest('[data-open-vehicle]'); if (v) return showVehicle(v.dataset.openVehicle);
 });
 
@@ -1085,14 +1143,23 @@ function editQuote(q, preset = {}) {
     const data = { ...(q || {}), clienteId: cliSel.value, vehiculoId: vehSel.value, validez: val(sheet, 'f-validez'), tecnico: val(sheet, 'f-tecnico'),
       notas: val(sheet, 'f-notas'), descuento: Math.max(0, Number(val(sheet, 'f-descuento')) || 0), impuesto: Math.max(0, Math.min(100, Number(val(sheet, 'f-impuesto')) || 0)), items };
     delete data.id;
-    if (!q) Object.assign(data, { numero: nextNumber(), estado: 'borrador', creada: new Date().toISOString(), creadaPor: S.myId || '' });
+    if (!q) Object.assign(data, { numero: nextNumber(), estado: 'borrador', creada: new Date().toISOString(), creadaPor: S.myId || '', ordenId: preset.ordenId || '' });
     e.target.disabled = true;
-    try { const id = await save('cotizaciones', q?.id, data); toast(q ? 'Cotización actualizada' : `Cotización ${data.numero} creada`); showQuote(id); }
+    try {
+      const id = await save('cotizaciones', q?.id, data);
+      if (!q && preset.ordenId) {
+        const o = byId(S.ordenes, preset.ordenId);
+        await patch('ordenes', preset.ordenId, { cotizacionId: id });
+        if (o && (o.estado === 'recibido' || o.estado === 'diagnostico')) await setOrderState({ ...o, cotizacionId: id }, 'diagnostico');
+      }
+      if (data.token) await S.db.doc('publicas/' + data.token).set(publicCopy({ ...data, id })).catch(() => {});
+      toast(q ? 'Cotización actualizada' : `Cotización ${data.numero} creada`); showQuote(id);
+    }
     catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
   };
 }
 
-function quoteMessage(q, extra = '') {
+function quoteMessage(q, extra = '', link = '') {
   const c = cliente(q.clienteId), v = vehiculo(q.vehiculoId), t = totals(q), cfg = S.config;
   const lines = q.items.map((i) => `• ${i.desc}${i.cantidad !== 1 ? ` (x${i.cantidad})` : ''}: ${money(i.cantidad * i.precio)}`).join('\n');
   return [
@@ -1106,7 +1173,7 @@ function quoteMessage(q, extra = '') {
     `TOTAL: ${money(t.total)}`,
     q.validez ? `Válida hasta el ${fdate(q.validez)}.` : '',
     q.notas ? `\n${q.notas}` : '',
-    '', 'Responde a este mensaje para aprobarla o si tienes alguna pregunta.',
+    '', link ? `Revísala y apruébala aquí: ${link}` : 'Responde a este mensaje para aprobarla o si tienes alguna pregunta.',
     [cfg.telefono, cfg.correo, cfg.direccion].filter(Boolean).join(' · '),
   ].filter((l, i, a) => l !== '' || (a[i - 1] !== '' && i > 0)).join('\n').trim();
 }
@@ -1165,17 +1232,20 @@ function showQuote(id) {
           <div class="send-card"><strong>Correo</strong><p>${c?.correo ? `Abre Gmail con un correo para ${esc(c.correo)} ya redactado.` : 'El cliente no tiene correo registrado.'}</p><a class="btn" target="_blank" rel="noopener" id="send-mail">Redactar en Gmail</a></div>
           <div class="send-card"><strong>Archivo de la cotización</strong><p>Descarga un documento para adjuntar, imprimir o guardar como PDF.</p><button class="btn" id="send-file">Descargar cotización</button></div>
         </div>
+        <div class="send-card"><strong>Enlace para aprobar</strong><p>El cliente abre la cotización en su celular y la aprueba o rechaza; aquí se actualiza sola.</p>
+          <div class="toolbar"><input id="q-link" readonly value="${esc(quoteLink(q))}" style="flex:1;min-width:0"><button class="btn small" id="copy-link">Copiar enlace</button></div></div>
         <details><summary class="muted" style="cursor:pointer">Ver o copiar el texto del mensaje</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px"><div class="msg-preview" id="msg" tabindex="0"></div><div><button class="btn small" id="copy-msg">Copiar texto</button></div></div></details>
-        <p class="muted" style="margin:0;font-size:.85rem">Al usar cualquiera de estas opciones, la cotización se marca como enviada. Cuando el cliente responda, cambia el estado a Aprobada o Rechazada.</p>
+        <p class="muted" style="margin:0;font-size:.85rem">Al usar cualquiera de estas opciones, la cotización se marca como enviada. Si el cliente responde por el enlace, el estado cambia solo; si responde por otro medio, cámbialo tú arriba.</p>
       </section>`;
-    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}${q.estado !== 'aprobada' ? '<button class="btn" data-edit>Editar</button>' : ''}<button class="btn" data-dup>Duplicar</button>` : '';
+    const ord = S.ordenes.find((o) => o.id === q.ordenId || o.cotizacionId === q.id);
+    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}${q.estado !== 'aprobada' ? '<button class="btn" data-edit>Editar</button>' : ''}<button class="btn" data-dup>Duplicar</button>${ord ? `<button class="btn primary" data-open-order="${esc(ord.id)}">Ver orden ${esc(ord.numero)}</button>` : '<button class="btn primary" data-make-order>Crear orden de trabajo</button>'}` : '';
     const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
     const extraPrev = existing ? $('#q-extra', existing)?.value : '';
     const s = existing || openSheet(`Cotización ${q.numero}`, body, foot, draw);
     if (existing) { $('.sheet-body', s).innerHTML = body; $('#q-extra', s).value = extraPrev || ''; }
 
     const update = () => {
-      const msg = quoteMessage(q, $('#q-extra', s).value.trim());
+      const msg = quoteMessage(q, $('#q-extra', s).value.trim(), quoteLink(q));
       $('#msg', s).textContent = msg;
       $('#send-wa', s).href = `https://wa.me/${digits(c?.telefono)}?text=${encodeURIComponent(msg)}`;
       const mail = $('#send-mail', s);
@@ -1183,12 +1253,17 @@ function showQuote(id) {
     };
     update();
     $('#q-extra', s).oninput = update;
+    // Sending publishes the client's copy behind the link, then marks the quote as sent.
     const markSent = async () => {
-      if (!S.canWrite || q.estado !== 'borrador') return;
-      try { await patch('cotizaciones', id, { estado: 'enviada', enviada: new Date().toISOString() }); } catch (err) { toast(dbErr(err)); }
+      if (!S.canWrite) return;
+      try {
+        await publishQuote(q, q.estado === 'borrador' ? 'enviada' : q.estado);
+        if (q.estado === 'borrador') await patch('cotizaciones', id, { estado: 'enviada', enviada: new Date().toISOString() });
+      } catch (err) { toast(dbErr(err)); }
     };
     $('#send-wa', s).addEventListener('click', () => { markSent(); toast('Abriendo WhatsApp…'); });
     $('#send-mail', s).addEventListener('click', () => { markSent(); toast('Abriendo Gmail…'); });
+    $('#copy-link', s).onclick = async () => { const ok = await copyText(quoteLink(q), $('#q-link', s)); toast(ok ? 'Enlace copiado' : 'Selecciona el enlace y cópialo'); markSent(); };
     $('#copy-msg', s).onclick = async () => { const ok = await copyText($('#msg', s).textContent, $('#msg', s)); toast(ok ? 'Texto copiado' : 'Selecciona el texto y cópialo con Ctrl+C'); if (ok) markSent(); };
     $('#send-file', s).onclick = async (e) => {
       const url = URL.createObjectURL(new Blob([quoteDocument(q)], { type: 'text/html' }));
@@ -1204,12 +1279,19 @@ function showQuote(id) {
       const d = { estado };
       if (estado === 'aprobada' || estado === 'rechazada') d.respondida = new Date().toISOString();
       if (estado === 'enviada' && !q.enviada) d.enviada = new Date().toISOString();
-      try { await patch('cotizaciones', id, d); toast(`Estado: ${ESTADOS[estado]}`); } catch (err) { toast(dbErr(err)); e.target.value = q.estado; }
+      try {
+        await patch('cotizaciones', id, d);
+        if (q.token) await S.db.doc('publicas/' + q.token).update({ estado: estado === 'borrador' ? 'enviada' : estado }).catch(() => {});
+        if (estado === 'aprobada') await advanceOnApproval(q);
+        toast(`Estado: ${ESTADOS[estado]}`);
+      } catch (err) { toast(dbErr(err)); e.target.value = q.estado; }
     };
     $('[data-edit]', s)?.addEventListener('click', () => editQuote(q));
+    $('[data-make-order]', s)?.addEventListener('click', () => editOrder(null, { clienteId: q.clienteId, vehiculoId: q.vehiculoId, cotizacionId: q.id }));
     $('[data-dup]', s).onclick = () => editQuote(null, { draft: { clienteId: q.clienteId, vehiculoId: q.vehiculoId, impuesto: q.impuesto, descuento: q.descuento,
       notas: q.notas, tecnico: q.tecnico, items: structuredClone(q.items) } });
     if ($('[data-del]', s)) $('[data-del]', s).onclick = async () => {
+      if (ord) { toast(`No se puede eliminar: está vinculada a la orden ${ord.numero}.`); return; }
       if (!(await ask(`¿Eliminar la cotización ${q.numero}? Esta acción no se puede deshacer.`))) return;
       try { await remove('cotizaciones', id); closeSheet(); toast('Cotización eliminada'); } catch (err) { toast(dbErr(err)); }
     };
@@ -1217,13 +1299,537 @@ function showQuote(id) {
   sheetRefresh = null;
   draw();
 }
+// ---------- Work orders: reception, repair status, payments ----------
+const OT_ESTADOS = { recibido: 'Recibido', diagnostico: 'En diagnóstico', esperando_aprobacion: 'Esperando aprobación', en_reparacion: 'En reparación',
+  esperando_repuestos: 'Esperando repuestos', terminado: 'Listo para entregar', entregado: 'Entregado', cancelado: 'Cancelado' };
+const OT_PILL = { recibido: 'borrador', diagnostico: 'enviada', esperando_aprobacion: 'vencida', en_reparacion: 'enviada', esperando_repuestos: 'vencida',
+  terminado: 'aprobada', entregado: 'borrador', cancelado: 'rechazada' };
+const OT_ANTES = ['recibido', 'diagnostico', 'esperando_aprobacion']; // states before the client approves the work
+const METODOS = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', otro: 'Otro' };
+const COMBUSTIBLE = ['Vacío', '1/4', '1/2', '3/4', 'Lleno'];
+const CHECKLIST = [['luces', 'Luces'], ['llantas', 'Llantas'], ['repuesto', 'Llanta de repuesto'], ['herramientas', 'Gata y herramientas'], ['espejos', 'Espejos'],
+  ['parabrisas', 'Parabrisas y vidrios'], ['limpia', 'Limpiaparabrisas'], ['carroceria', 'Carrocería (golpes, rayones)'], ['tapiceria', 'Tapicería'],
+  ['radio', 'Radio / pantalla'], ['aire', 'Aire acondicionado'], ['tablero', 'Testigos del tablero'], ['documentos', 'Tarjeta de circulación'], ['llaves', 'Llaves']];
+const CHECK_OPC = [['ok', 'Bien'], ['mal', 'Revisar'], ['na', 'N/A']];
+const MAX_FOTOS = 8;
+
+const activa = (o) => o.estado !== 'entregado' && o.estado !== 'cancelado';
+const otPill = (o) => `<span class="pill st-${OT_PILL[o.estado] || 'borrador'}">${OT_ESTADOS[o.estado] || esc(o.estado)}</span>`;
+const otQuote = (o) => (o.cotizacionId ? byId(S.cotizaciones, o.cotizacionId) : null);
+const otTotal = (o) => { const q = otQuote(o); return q ? totals(q).total : 0; };
+const otPagado = (o) => r2((o.pagos || []).reduce((s, p) => s + (Number(p.monto) || 0), 0));
+const otSaldo = (o) => Math.max(0, r2(otTotal(o) - otPagado(o)));
+const quien = (id) => byId(S.personal, id)?.nombre || '';
+function pagoPill(o) {
+  const t = otTotal(o), p = otPagado(o);
+  if (!t) return '';
+  if (p >= t) return '<span class="pill st-aprobada">Pagado</span>';
+  return p > 0 ? '<span class="pill st-vencida">Abonado</span>' : '<span class="pill st-borrador">Pendiente de pago</span>';
+}
+function nextOtNumber() {
+  const max = S.ordenes.reduce((m, o) => Math.max(m, parseInt(String(o.numero || '').replace(/\D/g, ''), 10) || 0), 0);
+  return 'OT-' + String(max + 1).padStart(4, '0');
+}
+function randomToken() {
+  const b = crypto.getRandomValues(new Uint8Array(18));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function orderTable(list, emptyMsg, { owner = true } = {}) {
+  if (!list.length) return `<div class="empty"><strong>${esc(emptyMsg)}</strong></div>`;
+  return `<div class="table-scroll"><table><thead><tr><th>Orden</th>${owner ? '<th>Cliente</th>' : ''}<th>Vehículo</th><th>Ingreso</th><th>Estado</th><th>Mecánico</th><th class="num">Total</th><th class="num">Saldo</th></tr></thead><tbody>
+    ${list.map((o) => { const v = vehiculo(o.vehiculoId); const t = otTotal(o); return `<tr class="row" data-open-order="${esc(o.id)}">
+      <td class="mono strong">${esc(o.numero)}</td>${owner ? `<td>${esc(cliente(o.clienteId)?.nombre || '—')}</td>` : ''}
+      <td><span class="veh-cell">${v ? brandLogo(v.marca) : ''}${plate(v?.placa)}</span></td><td class="muted">${fdate(o.creada)}</td>
+      <td>${otPill(o)}</td><td>${esc(quien(o.tecnico) || '—')}</td><td class="num">${t ? money(t) : '—'}</td>
+      <td class="num ${otSaldo(o) ? 'strong' : 'muted'}">${t ? money(otSaldo(o)) : '—'}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+views.ordenes = {
+  shell: () => `${banner()}<div class="head"><div><h1>Órdenes de trabajo</h1><p class="sub">Vehículos que entran al taller: recepción, reparación, cobro y entrega.</p></div>
+    <div class="toolbar"><input class="search" id="q-ot" placeholder="Buscar orden, cliente o placa" value="${esc(S.q.ordenes || '')}">
+    <select id="q-ot-estado" style="width:auto"><option value="activas">En el taller</option><option value="">Todas</option>${Object.entries(OT_ESTADOS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+    ${S.canWrite ? '<button class="btn primary" data-act="new-order">+ Nueva orden</button>' : ''}</div></div>
+    <section class="panel" data-part="list"></section>`,
+  bind(root) {
+    $('#q-ot-estado', root).value = S.q.otEstado ?? 'activas';
+    $('#q-ot', root).oninput = (e) => { S.q.ordenes = e.target.value; this.fill(root); };
+    $('#q-ot-estado', root).onchange = (e) => { S.q.otEstado = e.target.value; this.fill(root); };
+  },
+  fill(root) {
+    const t = (S.q.ordenes || '').toLowerCase(), est = S.q.otEstado ?? 'activas';
+    const list = S.ordenes.filter((o) => (est === 'activas' ? activa(o) : !est || o.estado === est)
+      && (!t || [o.numero, cliente(o.clienteId)?.nombre, vehiculo(o.vehiculoId)?.placa].some((x) => String(x || '').toLowerCase().includes(t))));
+    $('[data-part=list]', root).innerHTML = loading() ? '<div class="empty"><strong>Cargando órdenes…</strong></div>'
+      : list.length || S.ordenes.length ? orderTable(list, 'Ninguna orden coincide con el filtro')
+        : '<div class="empty"><strong>Todavía no hay órdenes de trabajo</strong><span>Cuando entre un vehículo, crea su orden con “Nueva orden”, haz la recepción con fotos y firma, y luego su cotización.</span></div>';
+  },
+};
+
+function editOrder(o, preset = {}) {
+  if (!S.clientes.length) { toast('Primero registra un cliente.'); go('clientes'); return; }
+  const x = o || { clienteId: preset.clienteId || '', vehiculoId: preset.vehiculoId || '', tecnico: '', motivo: '', prometida: '' };
+  const cliOpts = [['', 'Selecciona un cliente…'], ...[...S.clientes].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((c) => [c.id, c.nombre])];
+  const staffOpts = [['', 'Sin asignar'], ...S.personal.filter((p) => p.activo !== false || p.id === x.tecnico).map((p) => [p.id, `${p.nombre} · ${ROLES[p.rol] || ''}`])];
+  const sheet = openSheet(o ? `Editar ${o.numero}` : 'Nueva orden de trabajo', `<div class="grid2">
+      ${select('f-cliente', 'Cliente', cliOpts, x.clienteId, { req: true })}
+      <label class="field"><span>Vehículo *</span><select id="f-vehiculo"></select></label>
+      ${select('f-tecnico', 'Mecánico asignado', staffOpts, x.tecnico)}
+      ${input('f-prometida', 'Fecha prometida de entrega', x.prometida, { type: 'date' })}
+      ${input('f-motivo', 'Motivo de ingreso (lo que reporta el cliente)', x.motivo, { area: true, span: true, attrs: 'placeholder="Ej: Ruido al frenar y vibración en el volante."' })}
+    </div><p class="err" id="f-err"></p>`,
+  `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>${o ? 'Guardar orden' : 'Crear orden'}</button>`);
+  const cliSel = $('#f-cliente', sheet), vehSel = $('#f-vehiculo', sheet);
+  const fillVeh = (sel) => {
+    const vs = S.vehiculos.filter((v) => v.clienteId === cliSel.value);
+    vehSel.innerHTML = `<option value="">${cliSel.value ? (vs.length ? 'Selecciona el vehículo…' : 'Este cliente no tiene vehículos') : '—'}</option>`
+      + vs.map((v) => `<option value="${esc(v.id)}" ${v.id === sel ? 'selected' : ''}>${esc(v.placa)} · ${esc(v.marca)} ${esc(v.modelo)}</option>`).join('');
+  };
+  cliSel.onchange = () => fillVeh('');
+  fillVeh(x.vehiculoId);
+  $('[data-cancel]', sheet).onclick = () => (o ? showOrder(o.id) : closeSheet());
+  $('[data-save]', sheet).onclick = async (e) => {
+    if (!cliSel.value || !vehSel.value) return void ($('#f-err').textContent = 'Selecciona el cliente y el vehículo.');
+    const data = { clienteId: cliSel.value, vehiculoId: vehSel.value, tecnico: val(sheet, 'f-tecnico'), prometida: val(sheet, 'f-prometida'), motivo: val(sheet, 'f-motivo') };
+    e.target.disabled = true;
+    try {
+      let id = o?.id;
+      if (o) await patch('ordenes', id, data);
+      else {
+        const q = preset.cotizacionId ? byId(S.cotizaciones, preset.cotizacionId) : null;
+        const estado = q ? (q.estado === 'aprobada' ? 'en_reparacion' : 'esperando_aprobacion') : 'recibido';
+        const now = new Date().toISOString();
+        id = await save('ordenes', null, { ...data, numero: nextOtNumber(), estado, creada: now, creadaPor: S.myId || '', cotizacionId: q?.id || '',
+          pagos: [], historial: [{ estado, fecha: now, por: S.myId || '' }] });
+        if (q) await patch('cotizaciones', q.id, { ordenId: id });
+      }
+      toast(o ? 'Orden actualizada' : 'Orden creada');
+      showOrder(id);
+    } catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+async function setOrderState(o, estado, extra = {}) {
+  const now = new Date().toISOString();
+  const d = { estado, historial: [...(o.historial || []), { estado, fecha: now, por: S.myId || '' }], ...extra };
+  if (estado === 'entregado') d.entregada = now;
+  await patch('ordenes', o.id, d);
+}
+// When the client approves the quote, an order still waiting moves to repair.
+async function advanceOnApproval(q) {
+  const o = S.ordenes.find((x) => x.id === q.ordenId || (x.cotizacionId && x.cotizacionId === q.id));
+  if (o && OT_ANTES.includes(o.estado)) await setOrderState(o, 'en_reparacion').catch(() => {});
+}
+
+const imgCache = new Map();
+function orderImages(id) {
+  if (!imgCache.has(id)) imgCache.set(id, S.db.collection(`ordenes/${id}/imagenes`).get()
+    .then((s) => s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.creada || '').localeCompare(b.creada || '')))
+    .catch(() => { imgCache.delete(id); return []; }));
+  return imgCache.get(id);
+}
+function lightbox(src) {
+  const el = document.createElement('div');
+  el.className = 'lightbox';
+  el.innerHTML = `<img src="${esc(src)}" alt="Foto de la recepción"><button class="btn small" aria-label="Cerrar">✕ Cerrar</button>`;
+  el.onclick = () => el.remove();
+  document.body.appendChild(el);
+}
+function fuelGauge(n) {
+  return `<span class="fuel" title="Combustible: ${COMBUSTIBLE[n] || '—'}">${[0, 1, 2, 3].map((i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span> ${esc(COMBUSTIBLE[n] || '—')}`;
+}
+
+function showOrder(id) {
+  const draw = () => {
+    const o = byId(S.ordenes, id);
+    if (!o) { closeSheet(); return; }
+    const c = cliente(o.clienteId), v = vehiculo(o.vehiculoId), q = otQuote(o), r = o.recepcion;
+    const t = otTotal(o), pagado = otPagado(o), saldo = otSaldo(o);
+    const staffOpts = [['', 'Sin asignar'], ...S.personal.filter((p) => p.activo !== false || p.id === o.tecnico).map((p) => [p.id, p.nombre])];
+    const linkable = S.cotizaciones.filter((x) => x.vehiculoId === o.vehiculoId && !x.ordenId && x.estado !== 'rechazada');
+    const problemas = r ? CHECKLIST.filter(([k]) => r.checklist?.[k] === 'mal').map(([, l]) => l) : [];
+    const body = `<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${otPill(o)}${pagoPill(o)}<span class="muted" style="font-size:.88rem">Ingresó ${fdate(o.creada)}${o.prometida ? ` · prometido ${fdate(o.prometida)}` : ''}${o.entregada ? ` · entregado ${fdate(o.entregada)}` : ''}</span></div>
+        ${S.canWrite ? `<label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>Estado</span><select id="ot-estado" style="width:auto">${Object.entries(OT_ESTADOS).map(([k, l]) => `<option value="${k}" ${k === o.estado ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}
+      </div>
+      ${q && q.estado === 'aprobada' && OT_ANTES.includes(o.estado) ? `<div class="notice info" style="margin:0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>El cliente aprobó la cotización ${esc(q.numero)}.</span>${S.canWrite ? '<button class="btn small primary" id="ot-go-repair">Pasar a En reparación</button>' : ''}</div>` : ''}
+      <div class="grid2"><div><h3>Cliente</h3>${c ? `<a href="#clientes" data-goto-client="${esc(c.id)}" class="strong">${esc(c.nombre)}</a><div class="muted mono" style="font-size:.88rem">${esc(c.telefono || 'sin WhatsApp')}</div>` : '—'}</div>
+        <div><h3>Vehículo</h3>${v ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${brandLogo(v.marca)}${plate(v.placa)}<span>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</span><span class="mini-car">${carSvg(v.carroceria || guessBody(v.marca, v.modelo), colorHex(v.color), v.modelo)}</span></div>` : '—'}</div></div>
+      <div class="grid2">${S.canWrite ? select('ot-tecnico', 'Mecánico asignado', staffOpts, o.tecnico) : `<div><h3>Mecánico</h3>${esc(quien(o.tecnico) || 'Sin asignar')}</div>`}
+        <div><h3>Motivo de ingreso</h3><p style="margin:0;white-space:pre-wrap">${esc(o.motivo || '—')}</p></div></div>
+
+      <section class="panel panel-pad ot-section"><div class="sec-head"><h2>Recepción del vehículo</h2>${S.canWrite && r ? '<button class="btn small" id="ot-recep">Editar recepción</button>' : ''}</div>
+        ${r ? `<div class="grid2"><dl class="dl"><dt>Kilometraje</dt><dd class="mono">${r.km !== '' && r.km != null ? Number(r.km).toLocaleString('es') + ' km' : '—'}</dd>
+            <dt>Combustible</dt><dd>${fuelGauge(r.combustible)}</dd><dt>Recibido</dt><dd>${fdate(r.fecha)}${r.por ? ` por ${esc(quien(r.por))}` : ''}</dd>
+            <dt>Entregó</dt><dd>${esc(r.firmante || '—')}</dd></dl>
+          <div><h3>Revisión</h3>${problemas.length ? `<ul class="issues">${problemas.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '<p class="muted" style="margin:0">Sin observaciones en el checklist.</p>'}</div></div>
+          ${r.obs ? `<div><h3>Observaciones</h3><p style="margin:0;white-space:pre-wrap">${esc(r.obs)}</p></div>` : ''}
+          <div class="thumbs" id="ot-imgs">${r.fotos || r.firma ? '<span class="muted">Cargando fotos…</span>' : ''}</div>
+          <div><button class="btn small" id="ot-recep-doc">Descargar hoja de recepción</button></div>`
+        : `<div class="empty" style="padding:16px"><span>Registra el kilometraje, el combustible, el estado del vehículo, fotos y la firma del cliente.</span>${S.canWrite ? '<button class="btn primary" id="ot-recep">Hacer recepción</button>' : ''}</div>`}
+      </section>
+
+      <section class="panel panel-pad ot-section"><div class="sec-head"><h2>Cotización</h2></div>
+        ${q ? `<button class="btn" style="justify-content:space-between;white-space:normal" data-open-quote="${esc(q.id)}"><span><span class="mono strong">${esc(q.numero)}</span> ${pill(q)}</span><span class="strong">${money(totals(q).total)}</span></button>`
+        : `<p class="muted" style="margin:0">Esta orden aún no tiene cotización.</p>${S.canWrite ? `<div class="toolbar"><button class="btn primary" id="ot-new-quote">Crear cotización</button>
+            ${linkable.length ? `<select id="ot-link" style="width:auto"><option value="">Vincular una existente…</option>${linkable.map((x) => `<option value="${esc(x.id)}">${esc(x.numero)} · ${money(totals(x).total)}</option>`).join('')}</select>` : ''}</div>` : ''}`}
+      </section>
+
+      <section class="panel panel-pad ot-section"><div class="sec-head"><h2>Cobros</h2>${pagoPill(o)}</div>
+        <div class="totals" style="margin-left:0"><span>Total de la orden</span><span class="num">${t ? money(t) : '—'}</span><span>Pagado</span><span class="num">${money(pagado)}</span><span class="grand">Saldo</span><span class="grand num">${t ? money(saldo) : '—'}</span></div>
+        ${!t ? '<p class="muted" style="margin:0;font-size:.88rem">El total sale de la cotización vinculada.</p>' : ''}
+        ${(o.pagos || []).length ? `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Método</th><th>Nota</th><th>Registró</th><th class="num">Monto</th>${S.canDelete ? '<th></th>' : ''}</tr></thead><tbody>
+          ${o.pagos.map((p, i) => `<tr><td class="muted">${fdate(p.fecha)}</td><td>${METODOS[p.metodo] || esc(p.metodo)}</td><td>${esc(p.nota || '')}</td><td class="muted">${esc(quien(p.por))}</td><td class="num strong">${money(p.monto)}</td>${S.canDelete ? `<td><button class="btn ghost small" data-del-pago="${i}" aria-label="Quitar pago">✕</button></td>` : ''}</tr>`).join('')}
+          </tbody></table></div>` : ''}
+        ${S.canWrite ? `<div class="pay-form">${input('p-monto', 'Monto', saldo || '', { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}${select('p-metodo', 'Método', Object.entries(METODOS), 'efectivo')}
+          ${input('p-nota', 'Nota (opcional)', '', { attrs: 'placeholder="Ej: Anticipo"' })}<button class="btn primary" id="p-add">Registrar pago</button></div><p class="err" id="p-err"></p>` : ''}
+      </section>
+
+      <section class="ot-section"><h2>Avisar al cliente</h2>
+        <div class="toolbar"><a class="btn ok" target="_blank" rel="noopener" id="ot-wa">Enviar mensaje por WhatsApp</a></div>
+        <p class="muted" style="margin:0;font-size:.85rem">El mensaje cambia según el estado: recibido, en reparación o listo para entregar con el saldo pendiente.</p>
+      </section>
+
+      <section class="ot-section"><h2>Historial</h2><ul class="timeline">${[...(o.historial || [])].reverse().map((h) => `<li><span class="strong">${OT_ESTADOS[h.estado] || esc(h.estado)}</span> <span class="muted">· ${fdate(h.fecha)} ${new Date(h.fecha).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}${h.por ? ` · ${esc(quien(h.por))}` : ''}</span></li>`).join('')}</ul></section>`;
+    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar datos</button>${o.estado === 'terminado' ? '<button class="btn primary" id="ot-deliver">Marcar entregado</button>' : ''}` : '';
+    const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
+    const s = existing || openSheet(`Orden ${o.numero}`, body, foot, draw);
+    if (existing) { $('.sheet-body', s).innerHTML = body; $('.sheet-foot', s) && ($('.sheet-foot', s).innerHTML = foot); }
+
+    if (r && (r.fotos || r.firma)) orderImages(id).then((imgs) => {
+      const box = $('#ot-imgs', s); if (!box || !box.isConnected) return;
+      box.innerHTML = imgs.map((im) => `<button class="thumb ${im.tipo === 'firma' ? 'firma' : ''}" data-src="${esc(im.id)}" title="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto'}"><img src="${im.data}" alt="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto de la recepción'}"></button>`).join('') || '<span class="muted">Sin fotos.</span>';
+      box.onclick = (e) => { const b = e.target.closest('.thumb'); if (b) lightbox(imgs.find((im) => im.id === b.dataset.src).data); };
+    });
+    const msg = orderMessage(o);
+    $('#ot-wa', s).href = `https://wa.me/${digits(c?.telefono)}?text=${encodeURIComponent(msg)}`;
+    $('[data-goto-client]', s)?.addEventListener('click', (e) => { e.preventDefault(); showClient(c.id); });
+    $('#ot-recep-doc', s)?.addEventListener('click', async () => {
+      const imgs = r.fotos || r.firma ? await orderImages(id) : [];
+      downloadHtml(`Recepcion-${o.numero}.html`, receptionDocument(o, imgs));
+    });
+    if (!S.canWrite) return;
+    $('#ot-estado', s).onchange = async (e) => { try { await setOrderState(o, e.target.value); toast(`Estado: ${OT_ESTADOS[e.target.value]}`); } catch (err) { toast(dbErr(err)); e.target.value = o.estado; } };
+    $('#ot-go-repair', s)?.addEventListener('click', () => setOrderState(o, 'en_reparacion').catch((err) => toast(dbErr(err))));
+    $('#ot-deliver', s)?.addEventListener('click', async () => {
+      if (saldo > 0 && !(await ask(`Queda un saldo de ${money(saldo)}. ¿Marcar la orden como entregada de todos modos?`, 'Marcar entregado'))) return;
+      setOrderState(o, 'entregado').then(() => toast('Orden entregada')).catch((err) => toast(dbErr(err)));
+    });
+    $('#ot-tecnico', s).onchange = (e) => patch('ordenes', id, { tecnico: e.target.value }).then(() => toast('Mecánico asignado')).catch((err) => toast(dbErr(err)));
+    $('#ot-recep', s)?.addEventListener('click', () => editReception(o));
+    $('#ot-new-quote', s)?.addEventListener('click', () => editQuote(null, { clienteId: o.clienteId, vehiculoId: o.vehiculoId, ordenId: id }));
+    $('#ot-link', s)?.addEventListener('change', async (e) => {
+      const qid = e.target.value; if (!qid) return;
+      try {
+        await patch('cotizaciones', qid, { ordenId: id });
+        const lq = byId(S.cotizaciones, qid);
+        await patch('ordenes', id, { cotizacionId: qid });
+        if (lq?.estado === 'aprobada' && OT_ANTES.includes(o.estado)) await setOrderState({ ...o, cotizacionId: qid }, 'en_reparacion');
+        toast('Cotización vinculada');
+      } catch (err) { toast(dbErr(err)); }
+    });
+    $('#p-add', s)?.addEventListener('click', async (e) => {
+      const monto = r2(Number(val(s, 'p-monto')) || 0);
+      if (monto <= 0) return void ($('#p-err', s).textContent = 'Escribe el monto del pago.');
+      e.target.disabled = true;
+      try {
+        await patch('ordenes', id, { pagos: [...(o.pagos || []), { monto, metodo: val(s, 'p-metodo'), nota: val(s, 'p-nota'), fecha: new Date().toISOString(), por: S.myId || '' }] });
+        document.activeElement?.blur();
+        toast(`Pago de ${money(monto)} registrado`);
+      } catch (err) { $('#p-err', s).textContent = dbErr(err); e.target.disabled = false; }
+    });
+    $$('[data-del-pago]', s).forEach((b) => b.onclick = async () => {
+      const i = Number(b.dataset.delPago), p = o.pagos[i];
+      if (!(await ask(`¿Quitar el pago de ${money(p.monto)} del ${fdate(p.fecha)}?`, 'Quitar pago'))) return;
+      patch('ordenes', id, { pagos: o.pagos.filter((_, j) => j !== i) }).catch((err) => toast(dbErr(err)));
+    });
+    $('[data-edit]', s).onclick = () => editOrder(o);
+    if ($('[data-del]', s)) $('[data-del]', s).onclick = async () => {
+      if (!(await ask(`¿Eliminar la orden ${o.numero}? Se borran su recepción, fotos y pagos.`))) return;
+      try {
+        (await orderImages(id)).forEach((im) => S.db.doc(`ordenes/${id}/imagenes/${im.id}`).delete().catch(() => {}));
+        if (q) await patch('cotizaciones', q.id, { ordenId: '' });
+        await remove('ordenes', id); closeSheet(); toast('Orden eliminada');
+      } catch (err) { toast(dbErr(err)); }
+    };
+  };
+  sheetRefresh = null;
+  draw();
+}
+
+function orderMessage(o) {
+  const c = cliente(o.clienteId), v = vehiculo(o.vehiculoId), cfg = S.config;
+  const auto = v ? `tu ${v.marca} ${v.modelo} placa ${v.placa}` : 'tu vehículo';
+  const t = otTotal(o), saldo = otSaldo(o);
+  const cuerpo = {
+    recibido: `Recibimos ${auto} (orden ${o.numero}). Te avisaremos con el diagnóstico y la cotización.`,
+    diagnostico: `Estamos revisando ${auto} (orden ${o.numero}). Pronto te enviamos la cotización.`,
+    esperando_aprobacion: `La cotización de ${auto} está lista. Por favor revísala y apruébala para comenzar la reparación.`,
+    en_reparacion: `Ya estamos trabajando en ${auto} (orden ${o.numero}).${o.prometida ? ` La entrega estimada es el ${fdate(o.prometida)}.` : ''}`,
+    esperando_repuestos: `La reparación de ${auto} está en espera de repuestos. Te avisaremos apenas lleguen.`,
+    terminado: `¡${auto[0].toUpperCase() + auto.slice(1)} ya está listo para entregar!${t ? ` Total: ${money(t)}.${saldo ? ` Saldo pendiente: ${money(saldo)}.` : ' Ya está pagado.'}` : ''}`,
+    entregado: `Gracias por confiar en ${cfg.nombre}. Cualquier consulta sobre el trabajo de ${auto}, aquí estamos.`,
+    cancelado: `La orden ${o.numero} de ${auto} quedó cancelada. Escríbenos si tienes dudas.`,
+  }[o.estado] || '';
+  return [`Hola ${c?.nombre || ''}, te saluda ${cfg.nombre}.`, cuerpo, [cfg.telefono, cfg.direccion].filter(Boolean).join(' · ')].filter(Boolean).join('\n\n');
+}
+
+function downloadHtml(filename, html) {
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast('Documento descargado. Ábrelo para imprimirlo o guardarlo como PDF.');
+}
+function receptionDocument(o, imgs) {
+  const c = cliente(o.clienteId) || {}, v = vehiculo(o.vehiculoId), r = o.recepcion || {}, cfg = S.config;
+  const firma = imgs.find((im) => im.tipo === 'firma'), fotos = imgs.filter((im) => im.tipo !== 'firma');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recepción ${esc(o.numero)} · ${esc(cfg.nombre)}</title><style>
+body{font:14px/1.5 "Segoe UI",Arial,sans-serif;color:#1c2023;margin:0;background:#f3f4f2}main{max-width:780px;margin:24px auto;background:#fff;padding:36px;border:1px solid #d9ddd9}
+header{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:3px solid #1c2023;padding-bottom:14px}h1{margin:0;font-size:24px;text-transform:uppercase}h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5f676d;margin:18px 0 6px}
+.muted{color:#5f676d}.grid{display:flex;gap:30px;flex-wrap:wrap}.grid>div{flex:1;min-width:220px}.plate{font-family:Consolas,monospace;font-weight:700;letter-spacing:.12em;border:1.5px solid #1c2023;border-radius:4px;padding:0 6px}
+table{width:100%;border-collapse:collapse}td{padding:5px 6px;border-bottom:1px solid #d9ddd9}.mal{color:#b3261e;font-weight:700}.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.fotos img{width:100%;border-radius:4px}
+.firma img{max-width:320px;border-bottom:1px solid #1c2023}.bar{max-width:780px;margin:16px auto 0;text-align:right}.bar button{font:inherit;padding:8px 16px;border-radius:6px;border:1px solid #1c2023;background:#b7791f;font-weight:600;cursor:pointer}
+@media print{body{background:#fff}main{border:0;margin:0;padding:0}.bar{display:none}}</style></head><body>
+<div class="bar"><button onclick="window.print()">Imprimir o guardar como PDF</button></div><main>
+<header><div><h1>${esc(cfg.nombre)}</h1><div class="muted">${esc([cfg.direccion, cfg.telefono].filter(Boolean).join(' · '))}</div></div><div style="text-align:right"><b>HOJA DE RECEPCIÓN ${esc(o.numero)}</b><div class="muted">${esc(fdate(r.fecha || o.creada))}</div></div></header>
+<div class="grid"><div><h3>Cliente</h3><b>${esc(c.nombre || '')}</b>${c.telefono ? `<br>${esc(c.telefono)}` : ''}</div>
+${v ? `<div><h3>Vehículo</h3><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</b><br>Placa <span class="plate">${esc(v.placa)}</span>${v.color ? ` · ${esc(v.color)}` : ''}</div>` : ''}
+<div><h3>Ingreso</h3>Kilometraje: <b>${r.km !== '' && r.km != null ? esc(Number(r.km).toLocaleString('es')) + ' km' : '—'}</b><br>Combustible: <b>${esc(COMBUSTIBLE[r.combustible] || '—')}</b></div></div>
+${o.motivo ? `<h3>Motivo de ingreso</h3><div>${esc(o.motivo).replace(/\n/g, '<br>')}</div>` : ''}
+<h3>Revisión</h3><table>${CHECKLIST.map(([k, l]) => { const st = r.checklist?.[k]; return `<tr><td>${esc(l)}</td><td class="${st === 'mal' ? 'mal' : ''}">${st === 'ok' ? 'Bien' : st === 'mal' ? 'Revisar' : st === 'na' ? 'N/A' : '—'}</td></tr>`; }).join('')}</table>
+${r.obs ? `<h3>Observaciones</h3><div>${esc(r.obs).replace(/\n/g, '<br>')}</div>` : ''}
+${fotos.length ? `<h3>Fotos</h3><div class="fotos">${fotos.map((f) => `<img src="${f.data}" alt="Foto">`).join('')}</div>` : ''}
+<h3>Conformidad del cliente</h3><div class="firma">${firma ? `<img src="${firma.data}" alt="Firma">` : '<div style="height:60px;border-bottom:1px solid #1c2023;max-width:320px"></div>'}<div>${esc(r.firmante || '')}</div></div>
+<p class="muted" style="font-size:12px;margin-top:24px">El cliente declara que entrega el vehículo en el estado descrito.</p></main></body></html>`;
+}
+
+// Photos are shrunk on the phone before saving so each one stays small.
+async function compressImage(file, max = 1280, quality = 0.62) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
+    let scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    for (let tries = 0; tries < 4; tries++) {
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.naturalWidth * scale); cv.height = Math.round(img.naturalHeight * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      const data = cv.toDataURL('image/jpeg', quality);
+      if (data.length < 600000) return data;
+      scale *= 0.75;
+    }
+    throw new Error('La foto es demasiado grande.');
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function editReception(o) {
+  const v = vehiculo(o.vehiculoId), r = o.recepcion || {};
+  const state = { combustible: r.combustible ?? 2, checklist: { ...(r.checklist || {}) }, fotos: [], quitar: new Set(), firma: null, firmaExistente: null, firmar: !r.firma };
+  const sheet = openSheet(`Recepción · ${o.numero}`, `
+    <div class="grid2">${input('r-km', 'Kilometraje', r.km ?? v?.km ?? '', { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
+      <div class="field"><span>Combustible</span><div class="seg" id="r-fuel">${COMBUSTIBLE.map((l, i) => `<button type="button" data-v="${i}">${l}</button>`).join('')}</div></div></div>
+    <section><h3>Revisión del vehículo</h3><div class="checklist">${CHECKLIST.map(([k, l]) => `<div class="check-row"><span>${esc(l)}</span><div class="seg small" data-k="${k}">${CHECK_OPC.map(([ov, ol]) => `<button type="button" data-v="${ov}" class="o-${ov}">${ol}</button>`).join('')}</div></div>`).join('')}</div></section>
+    ${input('r-obs', 'Observaciones (golpes, rayones, objetos dentro del vehículo)', r.obs || '', { area: true })}
+    <section><h3>Fotos (hasta ${MAX_FOTOS})</h3><div class="thumbs" id="r-thumbs"></div>
+      <label class="btn" style="align-self:flex-start;margin-top:8px">📷 Agregar fotos<input type="file" id="r-file" accept="image/*" capture="environment" multiple hidden></label></section>
+    <section><h3>Firma del cliente</h3><div id="r-sign"></div>
+      ${input('r-firmante', 'Nombre de quien entrega el vehículo', r.firmante || cliente(o.clienteId)?.nombre || '')}</section>
+    <p class="err" id="r-err"></p>`,
+  `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar recepción</button>`);
+  const paintSeg = (box, value) => $$('button', box).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === String(value))));
+  paintSeg($('#r-fuel', sheet), state.combustible);
+  $('#r-fuel', sheet).onclick = (e) => { const b = e.target.closest('button'); if (b) { state.combustible = Number(b.dataset.v); paintSeg($('#r-fuel', sheet), state.combustible); } };
+  $$('.seg[data-k]', sheet).forEach((box) => {
+    paintSeg(box, state.checklist[box.dataset.k]);
+    box.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const k = box.dataset.k; state.checklist[k] = state.checklist[k] === b.dataset.v ? '' : b.dataset.v; paintSeg(box, state.checklist[k]); };
+  });
+
+  let existentes = [];
+  const thumbs = () => {
+    const vivas = existentes.filter((im) => im.tipo !== 'firma' && !state.quitar.has(im.id));
+    $('#r-thumbs', sheet).innerHTML = [...vivas.map((im) => ({ key: 'e:' + im.id, data: im.data })), ...state.fotos.map((d, i) => ({ key: 'n:' + i, data: d }))]
+      .map((f) => `<span class="thumb"><img src="${f.data}" alt="Foto"><button type="button" class="x" data-key="${f.key}" aria-label="Quitar foto">✕</button></span>`).join('') || '<span class="muted">Sin fotos todavía.</span>';
+    return vivas.length + state.fotos.length;
+  };
+  $('#r-thumbs', sheet).onclick = (e) => {
+    const b = e.target.closest('.x'); if (!b) return;
+    const [kind, k] = b.dataset.key.split(':');
+    if (kind === 'e') state.quitar.add(k); else state.fotos.splice(Number(k), 1);
+    thumbs();
+  };
+  if (r.fotos || r.firma) orderImages(o.id).then((imgs) => { existentes = imgs; state.firmaExistente = imgs.find((im) => im.tipo === 'firma') || null; thumbs(); drawSign(); });
+  thumbs();
+  $('#r-file', sheet).onchange = async (e) => {
+    const files = [...e.target.files]; e.target.value = '';
+    for (const f of files) {
+      if (thumbs() >= MAX_FOTOS) { toast(`Máximo ${MAX_FOTOS} fotos por recepción.`); break; }
+      try { state.fotos.push(await compressImage(f)); thumbs(); } catch (err) { toast(err.message || 'No se pudo leer la foto.'); }
+    }
+  };
+
+  // Signature pad: draw with a finger or the mouse.
+  const drawSign = () => {
+    const box = $('#r-sign', sheet); if (!box) return;
+    if (!state.firmar && state.firmaExistente) {
+      box.innerHTML = `<div class="sign-saved"><img src="${state.firmaExistente.data}" alt="Firma guardada"></div><button type="button" class="btn small" id="r-resign">Firmar de nuevo</button>`;
+      $('#r-resign', box).onclick = () => { state.firmar = true; drawSign(); };
+      return;
+    }
+    box.innerHTML = '<canvas class="sign-pad" id="r-pad"></canvas><div class="toolbar" style="margin-top:6px"><span class="muted" style="font-size:.85rem">Firme dentro del recuadro.</span><button type="button" class="btn small" id="r-clear">Borrar firma</button></div>';
+    const cv = $('#r-pad', box), ctx = cv.getContext('2d');
+    const size = () => { const w = cv.clientWidth; cv.width = w * 2; cv.height = 170 * 2; ctx.scale(2, 2); ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1c2023'; };
+    size();
+    let drawing = false, last = null;
+    const pos = (e) => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    cv.onpointerdown = (e) => { drawing = true; last = pos(e); cv.setPointerCapture(e.pointerId); };
+    cv.onpointermove = (e) => { if (!drawing) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke(); last = p; state.firma = 'pendiente'; };
+    cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+    $('#r-clear', box).onclick = () => { ctx.clearRect(0, 0, cv.width, cv.height); state.firma = null; };
+    state.pad = cv;
+  };
+  drawSign();
+
+  $('[data-cancel]', sheet).onclick = () => showOrder(o.id);
+  $('[data-save]', sheet).onclick = async (e) => {
+    e.target.disabled = true;
+    try {
+      const base = `ordenes/${o.id}/imagenes`, now = new Date().toISOString();
+      for (const id of state.quitar) await S.db.doc(`${base}/${id}`).delete();
+      for (const data of state.fotos) await S.db.collection(base).add({ tipo: 'foto', data, creada: now });
+      let hayFirma = Boolean(state.firmaExistente) && !state.firmar;
+      if (state.firmar && state.firma && state.pad) { await S.db.doc(`${base}/firma`).set({ tipo: 'firma', data: state.pad.toDataURL('image/png'), creada: now }); hayFirma = true; }
+      const fotos = existentes.filter((im) => im.tipo !== 'firma' && !state.quitar.has(im.id)).length + state.fotos.length;
+      const km = val(sheet, 'r-km') ? parseInt(val(sheet, 'r-km'), 10) : '';
+      const recepcion = { km, combustible: state.combustible, checklist: state.checklist, obs: val(sheet, 'r-obs'), firmante: val(sheet, 'r-firmante'),
+        fotos, firma: hayFirma, fecha: r.fecha || now, por: r.por || S.myId || '' };
+      imgCache.delete(o.id);
+      await patch('ordenes', o.id, { recepcion });
+      if (v && km !== '' && (v.km === '' || v.km == null || km > Number(v.km))) await patch('vehiculos', v.id, { km });
+      toast('Recepción guardada');
+      showOrder(o.id);
+    } catch (err) { $('#r-err', sheet).textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+// ---------- Client approval by link ----------
+// Each sent quote gets a copy in "publicas/<token>" that anyone with the link can read and answer (see firestore.rules).
+const pendingTokens = {};
+const quoteToken = (q) => q.token || (pendingTokens[q.id] ||= randomToken());
+const quoteLink = (q) => `${location.origin}${location.pathname}?c=${quoteToken(q)}`;
+function publicCopy(q) {
+  const c = cliente(q.clienteId) || {}, v = vehiculo(q.vehiculoId), cfg = S.config;
+  return { estado: q.estado === 'borrador' ? 'enviada' : q.estado, numero: q.numero, creada: q.creada || '', validez: q.validez || '', impuesto: q.impuesto || 0,
+    descuento: q.descuento || 0, notas: q.notas || '', items: q.items || [], cliente: c.nombre || '',
+    vehiculo: v ? { marca: v.marca, modelo: v.modelo, anio: v.anio || '', placa: v.placa, color: v.color || '', carroceria: v.carroceria || '' } : null,
+    taller: { nombre: cfg.nombre, telefono: cfg.telefono, correo: cfg.correo, direccion: cfg.direccion, moneda: cfg.moneda, pie: cfg.pie }, actualizada: new Date().toISOString() };
+}
+async function publishQuote(q, estado) {
+  const token = quoteToken(q);
+  await S.db.doc('publicas/' + token).set(publicCopy({ ...q, estado: estado || q.estado }));
+  if (!q.token) await patch('cotizaciones', q.id, { token });
+  return token;
+}
+// Answers given on the public page are copied back into the quote by whichever staff member has the app open.
+S.respuestas = new Map();
+const syncing = new Set();
+function applyResponses() {
+  for (const [token, r] of S.respuestas) {
+    const q = S.cotizaciones.find((x) => x.token === token);
+    if (!q || q.estado !== 'enviada' || syncing.has(q.id)) continue;
+    syncing.add(q.id);
+    patch('cotizaciones', q.id, { estado: r.estado, respondida: r.respondida || new Date().toISOString(), respuestaCliente: true })
+      .then(() => { toast(`${cliente(q.clienteId)?.nombre || 'El cliente'} ${r.estado === 'aprobada' ? 'aprobó' : 'rechazó'} la cotización ${q.numero}`); if (r.estado === 'aprobada') return advanceOnApproval(q); })
+      .catch(() => {}).finally(() => syncing.delete(q.id));
+  }
+}
+
+async function showPublic(token) {
+  $('.topbar').hidden = true;
+  const root = $('#view');
+  const paint = (html) => { root.innerHTML = `<div class="public-wrap">${html}</div>`; };
+  paint('<div class="empty"><strong>Cargando cotización…</strong></div>');
+  let d;
+  try { const snap = await S.db.doc('publicas/' + token).get(); d = snap.exists ? snap.data() : null; } catch { d = undefined; }
+  if (d === undefined) return paint('<div class="empty"><strong>No se pudo cargar la cotización</strong><span>Revisa tu conexión a internet y vuelve a abrir el enlace.</span></div>');
+  if (!d) return paint('<div class="empty"><strong>No encontramos esta cotización</strong><span>Puede que el enlace esté incompleto. Pide al taller que te lo envíe de nuevo.</span></div>');
+  S.config = { ...S.config, ...d.taller };
+  document.title = `Cotización ${d.numero} · ${d.taller?.nombre || 'Taller'}`;
+  const t = totals(d), vencida = d.estado === 'enviada' && d.validez && d.validez < today();
+  const estadoBox = d.estado === 'aprobada' ? '<div class="notice ok-notice">✔ Aprobaste esta cotización. El taller ya fue notificado y se pondrá en contacto contigo.</div>'
+    : d.estado === 'rechazada' ? '<div class="notice">Rechazaste esta cotización. Si cambias de opinión, escribe al taller.</div>'
+      : vencida ? '<div class="notice">Esta cotización está vencida. Escribe al taller para que la actualice.</div>'
+        : '<div class="toolbar" style="justify-content:center"><button class="btn ok" id="pub-ok" style="padding:12px 22px;font-size:1rem">Aprobar cotización</button><button class="btn danger" id="pub-no">Rechazar</button></div>';
+  paint(`<section class="panel panel-pad" style="display:flex;flex-direction:column;gap:16px">
+    <div class="head" style="margin:0;align-items:flex-start"><div><h1>${esc(d.taller?.nombre || 'Taller')}</h1><p class="sub">${esc([d.taller?.direccion, d.taller?.telefono].filter(Boolean).join(' · '))}</p></div>
+      <div style="text-align:right"><div class="strong mono">${esc(d.numero)}</div><div class="muted" style="font-size:.88rem">Fecha ${fdate(d.creada)}</div><div class="muted" style="font-size:.88rem">Válida hasta ${fdate(d.validez)}</div></div></div>
+    <div><h3>Cliente</h3><span class="strong">${esc(d.cliente)}</span></div>
+    ${d.vehiculo ? vehicleLook(d.vehiculo) : ''}
+    <div class="table-scroll"><table><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num hide-sm">Precio</th><th class="num">Importe</th></tr></thead><tbody>
+      ${d.items.map((i) => `<tr><td>${esc(i.desc)}<div class="muted" style="font-size:.8rem">${TIPOS[i.tipo] || ''}</div></td><td class="num">${esc(i.cantidad)}</td><td class="num hide-sm">${money(i.precio)}</td><td class="num">${money(i.cantidad * i.precio)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="totals"><span>Subtotal</span><span class="num">${money(t.sub)}</span>${t.desc ? `<span>Descuento</span><span class="num">−${money(t.desc)}</span>` : ''}${t.imp ? `<span>Impuesto (${esc(d.impuesto)}%)</span><span class="num">${money(t.imp)}</span>` : ''}<span class="grand">Total</span><span class="grand num">${money(t.total)}</span></div>
+    ${d.notas ? `<div><h3>Observaciones</h3><p style="margin:0;white-space:pre-wrap">${esc(d.notas)}</p></div>` : ''}
+    ${estadoBox}<p class="err" id="pub-err" style="text-align:center"></p>
+    ${d.taller?.pie ? `<p class="muted" style="margin:0;text-align:center">${esc(d.taller.pie)}</p>` : ''}</section>`);
+  const respond = async (estado) => {
+    const ok = await ask(estado === 'aprobada' ? `¿Apruebas la cotización ${d.numero} por ${money(t.total)}?` : `¿Rechazas la cotización ${d.numero}?`, estado === 'aprobada' ? 'Sí, aprobar' : 'Sí, rechazar');
+    if (!ok) return;
+    try { await S.db.doc('publicas/' + token).update({ estado, respondida: new Date().toISOString() }); showPublic(token); }
+    catch { $('#pub-err').textContent = 'No se pudo enviar tu respuesta. Revisa tu conexión o escribe al taller.'; }
+  };
+  $('#pub-ok')?.addEventListener('click', () => respond('aprobada'));
+  $('#pub-no')?.addEventListener('click', () => respond('rechazada'));
+}
+
+// ---------- Reports ----------
+views.reportes = {
+  shell: () => `${banner()}<div class="head"><div><h1>Reportes</h1><p class="sub">Cobros, trabajos y cotizaciones del mes.</p></div>
+    <div class="toolbar"><label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>Mes</span><input type="month" id="rep-mes" value="${esc(S.q.mes || today().slice(0, 7))}" style="width:auto"></label></div></div>
+    <div data-part="rep"></div>`,
+  bind(root) { $('#rep-mes', root).onchange = (e) => { S.q.mes = e.target.value || today().slice(0, 7); this.fill(root); }; },
+  fill(root) {
+    const mes = S.q.mes || today().slice(0, 7);
+    const enMes = (f) => Boolean(f) && localMonth(f) === mes;
+    const pagos = S.ordenes.flatMap((o) => (o.pagos || []).map((p) => ({ ...p, o }))).filter((p) => enMes(p.fecha)).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const cobrado = r2(pagos.reduce((s, p) => s + p.monto, 0));
+    const porMetodo = Object.keys(METODOS).map((k) => [k, r2(pagos.filter((p) => p.metodo === k).reduce((s, p) => s + p.monto, 0))]).filter(([, v]) => v);
+    const entregadas = S.ordenes.filter((o) => enMes(o.entregada));
+    const ingresadas = S.ordenes.filter((o) => enMes(o.creada));
+    const aprobadas = S.cotizaciones.filter((q) => q.estado === 'aprobada' && enMes(q.respondida || q.creada));
+    const porCobrar = r2(S.ordenes.filter((o) => o.estado !== 'cancelado').reduce((s, o) => s + otSaldo(o), 0));
+    const mecanicos = S.personal.map((p) => {
+      const os = entregadas.filter((o) => o.tecnico === p.id);
+      return [p.nombre, os.length, r2(os.reduce((s, o) => s + otTotal(o), 0))];
+    }).filter(([, n]) => n);
+    const sinAsignar = entregadas.filter((o) => !o.tecnico).length;
+    $('[data-part=rep]', root).innerHTML = `<div class="stats">
+        <div class="stat hl"><span class="label">Cobrado en el mes</span><span class="value" style="font-size:1.6rem">${money(cobrado)}</span><span class="muted" style="font-size:.82rem">${pagos.length} pago${pagos.length === 1 ? '' : 's'}</span></div>
+        <div class="stat"><span class="label">Por cobrar (todas las órdenes)</span><span class="value" style="font-size:1.6rem">${money(porCobrar)}</span></div>
+        <div class="stat"><span class="label">Órdenes ingresadas</span><span class="value">${ingresadas.length}</span></div>
+        <div class="stat"><span class="label">Órdenes entregadas</span><span class="value">${entregadas.length}</span></div>
+        <div class="stat"><span class="label">Cotizaciones aprobadas</span><span class="value">${aprobadas.length}</span><span class="muted" style="font-size:.82rem">${money(aprobadas.reduce((s, q) => s + totals(q).total, 0))}</span></div>
+      </div>
+      <div class="two-col"><section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Pagos del mes</h2></div>
+        ${pagos.length ? `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Orden</th><th>Cliente</th><th>Método</th><th class="num">Monto</th></tr></thead><tbody>
+          ${pagos.map((p) => `<tr class="row" data-open-order="${esc(p.o.id)}"><td class="muted">${fdate(p.fecha)}</td><td class="mono">${esc(p.o.numero)}</td><td>${esc(cliente(p.o.clienteId)?.nombre || '—')}</td><td>${METODOS[p.metodo] || esc(p.metodo)}</td><td class="num strong">${money(p.monto)}</td></tr>`).join('')}</tbody></table></div>`
+          : '<div class="empty"><span>No hay pagos registrados en este mes.</span></div>'}</section>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <section class="panel panel-pad"><h2 style="margin-bottom:8px">Por método de pago</h2>${porMetodo.length ? `<div class="totals" style="margin-left:0;width:100%">${porMetodo.map(([k, v]) => `<span>${METODOS[k]}</span><span class="num">${money(v)}</span>`).join('')}</div>` : '<p class="muted" style="margin:0">Sin pagos.</p>'}</section>
+          <section class="panel panel-pad"><h2 style="margin-bottom:8px">Trabajos entregados por mecánico</h2>${mecanicos.length || sinAsignar ? `<div class="totals" style="margin-left:0;width:100%">${mecanicos.map(([n, c, tot]) => `<span>${esc(n)} · ${c}</span><span class="num">${money(tot)}</span>`).join('')}${sinAsignar ? `<span class="muted">Sin asignar · ${sinAsignar}</span><span></span>` : ''}</div>` : '<p class="muted" style="margin:0">Ninguna orden entregada en este mes.</p>'}</section>
+        </div></div>`;
+  },
+};
+function localMonth(iso) { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+
 // ---------- Data ----------
 function onData() {
+  applyResponses();
   renderView(false);
   if (sheetRefresh && $('#layer .sheet')) {
     const active = document.activeElement;
     // Don't redraw a sheet while someone is typing in it.
-    if (!(active && $('#layer').contains(active) && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.id !== 'q-estado-set')) sheetRefresh();
+    const typing = active && $('#layer').contains(active) && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && !active.readOnly && active.type !== 'checkbox'));
+    if (!typing) sheetRefresh();
   }
 }
 let unsubs = [];
@@ -1231,7 +1837,7 @@ function subscribe(col, key, sort) {
   unsubs.push(S.db.collection(col).limit(1000).onSnapshot((snap) => {
     S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(sort);
     S.loaded.add(key);
-    S.ready = S.loaded.size >= 4;
+    S.ready = S.loaded.size >= 5;
     onData();
   }, (err) => toast(dbErr(err))));
 }
@@ -1375,6 +1981,11 @@ async function enter(u) {
   subscribe('vehiculos', 'vehiculos', (a, b) => (a.placa || '').localeCompare(b.placa || ''));
   subscribe('cotizaciones', 'cotizaciones', (a, b) => (b.creada || '').localeCompare(a.creada || ''));
   subscribe('personal', 'personal', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  subscribe('ordenes', 'ordenes', (a, b) => (b.creada || '').localeCompare(a.creada || ''));
+  unsubs.push(S.db.collection('publicas').where('estado', 'in', ['aprobada', 'rechazada']).onSnapshot((snap) => {
+    S.respuestas = new Map(snap.docs.map((d) => [d.id, d.data()]));
+    applyResponses();
+  }, () => {}));
 }
 
 function start() {
@@ -1385,9 +1996,12 @@ function start() {
   S.db = firebase.firestore();
   S.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
   $('#logout').onclick = () => firebase.auth().signOut();
+  const publico = new URLSearchParams(location.search).get('c');
+  if (publico) { showPublic(publico); return; }
   firebase.auth().onAuthStateChanged(async (u) => {
     unsubs.forEach((f) => f()); unsubs = [];
-    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], me: null, myId: null, ready: false });
+    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], me: null, myId: null, ready: false });
+    S.respuestas = new Map();
     S.loaded = new Set();
     if (u) { if (!settingUp) await enter(u); return; }
     try {

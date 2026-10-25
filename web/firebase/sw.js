@@ -1,6 +1,6 @@
 // Service worker: keeps the app shell on the phone so it opens fast and installs as an app.
 // The page itself is always fetched fresh when there is internet; data goes straight to Firebase.
-const VERSION = 'taller-v1';
+const VERSION = 'taller-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 
 self.addEventListener('install', (e) => {

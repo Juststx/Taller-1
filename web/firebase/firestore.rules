@@ -1,6 +1,7 @@
 rules_version = '2';
 // Reglas de seguridad del taller. Pégalas en Firebase → Firestore Database → Reglas → Publicar.
 // Solo entran las cuentas registradas en "personal" y activas; cada rol tiene sus permisos.
+// El cliente, sin cuenta, solo puede ver su cotización por el enlace y aprobarla o rechazarla.
 service cloud.firestore {
   match /databases/{database}/documents {
     function staffDoc(uid) { return /databases/$(database)/documents/personal/$(uid); }
@@ -35,8 +36,25 @@ service cloud.firestore {
     }
 
     match /{col}/{id} {
-      allow read, create, update: if staff() && col in ['clientes', 'vehiculos', 'cotizaciones'];
-      allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'cotizaciones'];
+      allow read, create, update: if staff() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
+      allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
+    }
+
+    // Fotos y firma de la recepción de cada orden.
+    match /ordenes/{id}/imagenes/{img} {
+      allow read, create, update: if staff();
+      allow delete: if canDelete() || (staff() && img != 'firma');
+    }
+
+    // Copia de la cotización que ve el cliente por el enlace. Quien tenga el enlace la puede leer
+    // (no listar) y solo cambiar el estado de "enviada" a "aprobada" o "rechazada".
+    match /publicas/{token} {
+      allow get: if true;
+      allow list, create, delete: if staff();
+      allow update: if staff()
+        || (resource.data.estado == 'enviada'
+            && request.resource.data.estado in ['aprobada', 'rechazada']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'respondida']));
     }
   }
 }
