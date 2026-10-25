@@ -7,6 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Taller">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Taller Mecánico</title>
 <script>try { var t = localStorage.getItem('taller-tema'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -257,7 +261,7 @@ img { max-width: 100%; }
       <button class="tab" data-view="personal">Usuarios</button>
       <button class="tab" data-view="ajustes">Ajustes</button>
     </nav>
-    <div class="who" id="who" hidden><span id="who-name"></span><button class="btn small" id="logout">Salir</button></div>
+    <div class="who" id="who" hidden><span id="who-name"></span><button class="btn small" id="install-btn" hidden>Instalar app</button><button class="btn small" id="logout">Salir</button></div>
     </div>
   </div>
 </header>
@@ -1400,6 +1404,20 @@ function start() {
     }
   });
 }
+// ---------- Installable app ----------
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+// Chrome / Edge on Android and PC offer installation through this event; iPhone uses "Agregar a inicio".
+let installPrompt = null;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; $('#install-btn').hidden = false; });
+addEventListener('appinstalled', () => { installPrompt = null; $('#install-btn').hidden = true; toast('App instalada. Ábrela desde tu pantalla de inicio.'); });
+$('#install-btn').onclick = async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => null);
+  installPrompt = null; $('#install-btn').hidden = true;
+};
 start();
 </script>
 </body>
