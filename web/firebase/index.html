@@ -196,7 +196,11 @@ img { max-width: 100%; }
 .wordmark.lg { font-size: .72rem; }
 .look { border: 1px solid var(--line); border-radius: var(--radius); background: var(--sunken); padding: 14px 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .look-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .03em; }
-.look .car { width: min(280px, 100%); height: auto; }
+.look-pic { width: min(280px, 100%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.look .car { width: 100%; height: auto; }
+.look-pic img { width: min(240px, 100%); aspect-ratio: 16 / 10; object-fit: cover; border-radius: 6px; background: var(--surface); }
+.look-credit { font-size: .68rem; color: var(--muted); }
+.color-dot { display: inline-block; width: .72em; height: .72em; border-radius: 50%; border: 1px solid rgb(0 0 0 / .3); margin-right: 5px; vertical-align: -.04em; }
 .look-model { font-size: .82rem; color: var(--muted); }
 .veh-cell { display: inline-flex; align-items: center; gap: 8px; }
 .mini-car { width: 84px; height: auto; vertical-align: middle; }
@@ -414,8 +418,8 @@ function vehicleLook(v) {
   const sub = [v.modelo, v.anio, v.color].filter(Boolean).join(' · ');
   return `<div class="look">
     <div class="look-brand">${v.marca ? brandLogo(v.marca, true) : ''}<span>${esc(v.marca || 'Marca')}</span></div>
-    ${carSvg(tipo, colorHex(v.color), `${v.marca || ''} ${v.modelo || ''} ${v.color || ''}`)}
-    <div class="look-model">${esc(sub || 'Elige marca, modelo y color')}</div></div>`;
+    <div class="look-pic" data-photo="${esc(v.marca || '')}|${esc(v.modelo || '')}">${carSvg(tipo, colorHex(v.color), `${v.marca || ''} ${v.modelo || ''} ${v.color || ''}`)}</div>
+    <div class="look-model">${v.color ? `<span class="color-dot" style="background:${colorHex(v.color)}"></span>` : ''}${esc(sub || 'Elige marca, modelo y color')}</div></div>`;
 }
 
 
@@ -1169,6 +1173,60 @@ function subscribe(col, key, sort) {
     onData();
   }, (err) => toast(dbErr(err))));
 }
+
+// ---------- Real model photo (Wikipedia) ----------
+// The silhouette shows first; if Wikipedia has an article for "Marca Modelo" with a photo, it replaces it.
+const FOTO_TTL = 30 * 864e5;
+const fotoMem = new Map();
+const CAR_WORDS = /autom[oó]vil|veh[ií]culo|coche|carro|camioneta|furgoneta|todoterreno|deportivo|sed[aá]n|hatchback|monovolumen|pickup|pick-up|cami[oó]n|\bcar\b|automobile|\bSUV\b|crossover|truck|minivan|\bvan\b/i;
+function fotoTitles(marca, modelo) {
+  const clean = modelo.replace(/\s+(Sedán|Hatchback)$/i, '').trim();
+  const en = clean.replace(/^Clase (\S+)$/, '$1-Class').replace(/^Serie (\d)( Gran Coupé)?$/, '$1 Series$2');
+  const list = [['es', `${marca} ${modelo}`], ['es', `${marca} ${clean}`], ['en', `${marca} ${en}`]];
+  // Models named after the brand (Mazda3, Mazda6…) have articles under the bare model name.
+  if (norm(clean).startsWith(norm(marca).split(/[\s-]/)[0])) list.push(['en', en], ['es', clean]);
+  return list.filter((x, i, a) => a.findIndex((y) => y[0] === x[0] && y[1] === x[1]) === i);
+}
+function fotoModelo(marca, modelo) {
+  const key = `foto:${marca}|${modelo}`;
+  if (!fotoMem.has(key)) fotoMem.set(key, (async () => {
+    try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < FOTO_TTL) return c.v; } catch {}
+    let v = null, netFail = false;
+    for (const [lang, title] of fotoTitles(marca, modelo)) {
+      try {
+        const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`);
+        if (!r.ok) continue;
+        const d = await r.json();
+        if (d.type !== 'standard' || !d.thumbnail?.source || !CAR_WORDS.test(`${d.description || ''} ${d.extract || ''}`)) continue;
+        v = { src: d.thumbnail.source, page: d.content_urls?.desktop?.page || '' };
+        break;
+      } catch { netFail = true; }
+    }
+    // Remember "no photo" only when Wikipedia actually answered, not when offline.
+    if (v || !netFail) try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch {}
+    return v;
+  })());
+  return fotoMem.get(key);
+}
+function hydratePhotos() {
+  $$('[data-photo]:not([data-done])').forEach(async (el) => {
+    el.dataset.done = '1';
+    const [marca, modelo] = el.dataset.photo.split('|');
+    if (!marca || !modelo) return;
+    const f = await fotoModelo(marca, modelo);
+    if (!f || !el.isConnected) return;
+    const img = new Image();
+    img.alt = `${marca} ${modelo}`;
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => {
+      if (!el.isConnected) return;
+      el.replaceChildren(img);
+      if (f.page) el.append(Object.assign(document.createElement('a'), { href: f.page, target: '_blank', rel: 'noopener', className: 'look-credit', textContent: 'Foto: Wikipedia' }));
+    };
+    img.src = f.src;
+  });
+}
+new MutationObserver(hydratePhotos).observe(document.body, { childList: true, subtree: true });
 
 // ---------- Sign-in ----------
 let authNotice = '';

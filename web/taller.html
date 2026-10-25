@@ -176,7 +176,11 @@ tr.row:hover td { background: var(--sunken); }
 .wordmark.lg { font-size: .72rem; }
 .look { border: 1px solid var(--line); border-radius: var(--radius); background: var(--sunken); padding: 14px 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .look-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .03em; }
-.look .car { width: min(280px, 100%); height: auto; }
+.look-pic { width: min(280px, 100%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.look .car { width: 100%; height: auto; }
+.look-pic img { width: min(240px, 100%); aspect-ratio: 16 / 10; object-fit: cover; border-radius: 6px; background: var(--surface); }
+.look-credit { font-size: .68rem; color: var(--muted); }
+.color-dot { display: inline-block; width: .72em; height: .72em; border-radius: 50%; border: 1px solid rgb(0 0 0 / .3); margin-right: 5px; vertical-align: -.04em; }
 .look-model { font-size: .82rem; color: var(--muted); }
 .veh-cell { display: inline-flex; align-items: center; gap: 8px; }
 .mini-car { width: 84px; height: auto; vertical-align: middle; }
@@ -378,8 +382,8 @@ function vehicleLook(v) {
   const sub = [v.modelo, v.anio, v.color].filter(Boolean).join(' · ');
   return `<div class="look">
     <div class="look-brand">${v.marca ? brandLogo(v.marca, true) : ''}<span>${esc(v.marca || 'Marca')}</span></div>
-    ${carSvg(tipo, colorHex(v.color), `${v.marca || ''} ${v.modelo || ''} ${v.color || ''}`)}
-    <div class="look-model">${esc(sub || 'Elige marca, modelo y color')}</div></div>`;
+    <div class="look-pic" data-photo="${esc(v.marca || '')}|${esc(v.modelo || '')}">${carSvg(tipo, colorHex(v.color), `${v.marca || ''} ${v.modelo || ''} ${v.color || ''}`)}</div>
+    <div class="look-model">${v.color ? `<span class="color-dot" style="background:${colorHex(v.color)}"></span>` : ''}${esc(sub || 'Elige marca, modelo y color')}</div></div>`;
 }
 
 
