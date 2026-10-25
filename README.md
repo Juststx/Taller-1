@@ -1,6 +1,6 @@
 # Taller — Gestión de taller mecánico
 
-Aplicación web para administrar un taller: usuarios con roles, clientes, vehículos y
+Mi taller, es una aplicación web para administrar un taller: usuarios con roles, clientes, vehículos y
 cotizaciones que se envían al cliente por correo o WhatsApp para que las apruebe en línea.
 
 ## Capturas
