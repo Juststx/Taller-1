@@ -1145,8 +1145,18 @@ function start() {
     Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], me: null, myId: null, ready: false });
     S.loaded = new Set();
     if (u) { if (!settingUp) await enter(u); return; }
-    const setup = await S.db.doc('config/setup').get().catch(() => null);
-    showAuth(setup && !setup.exists ? 'setup' : 'login');
+    try {
+      const setup = await S.db.doc('config/setup').get();
+      showAuth(setup.exists ? 'login' : 'setup');
+    } catch (err) {
+      // Without this check the page can't tell whether to offer the first-time setup.
+      authNotice = err.code === 'permission-denied'
+        ? 'Faltan las reglas de seguridad: en Firebase → Firestore → Reglas, pega el contenido de firestore.rules, pulsa Publicar y recarga esta página.'
+        : err.code === 'unavailable'
+          ? 'No se pudo conectar con la base de datos. Revisa tu conexión a internet y recarga la página.'
+          : 'No se encontró la base de datos: en Firebase → Firestore, pulsa “Crear base de datos” (ID “(default)”) y recarga esta página.';
+      showAuth('login');
+    }
   });
 }
 start();
