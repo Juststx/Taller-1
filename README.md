@@ -3,7 +3,31 @@
 Aplicación web para administrar un taller: usuarios con roles, clientes, vehículos y
 cotizaciones que se envían al cliente por correo o WhatsApp para que las apruebe en línea.
 
-## Funcionalidades
+## Capturas
+
+Versión web con Firebase ([`web/firebase/`](web/firebase/README.md)), con datos de ejemplo.
+
+**Inicio**: resumen del taller y cotizaciones recientes.
+
+![Inicio del taller con el resumen de clientes, vehículos y cotizaciones](docs/capturas/1-inicio.png)
+
+**Cotización**: detalle de mano de obra y repuestos, totales con impuesto y envío al cliente.
+
+![Detalle de una cotización con sus líneas, totales y opciones de envío](docs/capturas/2-cotizacion.png)
+
+**Vehículo en el celular (modo oscuro)**: logo de la marca y silueta pintada del color del vehículo.
+
+<img src="docs/capturas/3-vehiculo-movil.png" alt="Ficha de un Kia Sportage rojo en el celular, en modo oscuro" width="320">
+
+## Versiones
+
+| Carpeta | Qué es |
+| --- | --- |
+| [`web/firebase/`](web/firebase/README.md) | Web instalable (PWA) con inicio de sesión y datos en Firebase. Es la versión en uso. |
+| [`web/taller.html`](web/taller.html) | La misma web como página de claude.ai, con datos guardados en claude.ai. |
+| `src/`, `public/` | Aplicación Node.js + SQLite descrita abajo, para un servidor propio. |
+
+## Funcionalidades (aplicación Node.js)
 
 - **Usuarios y roles**: el primer acceso crea la cuenta de administrador. El administrador crea usuarios
   con rol *Administrador*, *Recepción* o *Mecánico* y puede desactivarlos.
