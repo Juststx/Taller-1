@@ -1,0 +1,60 @@
+rules_version = '2';
+// Reglas de seguridad del taller. Pégalas en Firebase → Firestore Database → Reglas → Publicar.
+// Solo entran las cuentas registradas en "personal" y activas; cada rol tiene sus permisos.
+// El cliente, sin cuenta, solo puede ver su cotización por el enlace y aprobarla o rechazarla.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function staffDoc(uid) { return /databases/$(database)/documents/personal/$(uid); }
+    function setupDoc() { return /databases/$(database)/documents/config/setup; }
+    function signedIn() { return request.auth != null; }
+    function staff() { return signedIn() && exists(staffDoc(request.auth.uid)) && get(staffDoc(request.auth.uid)).data.activo == true; }
+    function role() { return get(staffDoc(request.auth.uid)).data.rol; }
+    function admin() { return staff() && role() == 'admin'; }
+    function canDelete() { return staff() && role() in ['admin', 'recepcion']; }
+
+    // Marca de que el administrador ya fue creado. Se puede leer sin sesión para saber si mostrar la configuración inicial.
+    match /config/setup {
+      allow get: if true;
+      allow create: if signedIn() && !exists(setupDoc())
+        && request.resource.data.owner == request.auth.uid
+        && getAfter(staffDoc(request.auth.uid)).data.rol == 'admin';
+    }
+
+    match /config/taller {
+      allow read: if staff();
+      allow write: if admin();
+    }
+
+    match /personal/{uid} {
+      allow read: if staff();
+      // El administrador da de alta a otros; el primer usuario se registra a sí mismo como administrador junto con config/setup.
+      allow create: if admin()
+        || (signedIn() && request.auth.uid == uid && !exists(setupDoc())
+            && getAfter(setupDoc()).data.owner == uid);
+      allow update: if admin();
+      allow delete: if admin() && uid != request.auth.uid;
+    }
+
+    match /{col}/{id} {
+      allow read, create, update: if staff() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
+      allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
+    }
+
+    // Fotos y firma de la recepción de cada orden.
+    match /ordenes/{id}/imagenes/{img} {
+      allow read, create, update: if staff();
+      allow delete: if canDelete() || (staff() && img != 'firma');
+    }
+
+    // Copia de la cotización que ve el cliente por el enlace. Quien tenga el enlace la puede leer
+    // (no listar) y solo cambiar el estado de "enviada" a "aprobada" o "rechazada".
+    match /publicas/{token} {
+      allow get: if true;
+      allow list, create, delete: if staff();
+      allow update: if staff()
+        || (resource.data.estado == 'enviada'
+            && request.resource.data.estado in ['aprobada', 'rechazada']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'respondida']));
+    }
+  }
+}
