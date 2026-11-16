@@ -321,6 +321,9 @@ const FIREBASE_CONFIG = {
   messagingSenderId: '887592798073',
   appId: '1:887592798073:web:b602d03d2f2c5d61e3d1a8',
 };
+// App Check (Firebase → App Check → reCAPTCHA v3): paste the site key here to block bots and scripts that
+// don't come from this page. Empty = off.
+const APP_CHECK_KEY = '';
 // ---------- State ----------
 const S = {
   db: null, user: null, ready: false, offline: false,
@@ -503,7 +506,7 @@ const addDays = (d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 1
 function money(n, cur = S.config.moneda) {
   const v = Number(n) || 0;
   try { return new Intl.NumberFormat('es', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 2 }).format(v); }
-  catch { return `${cur || ''} ${v.toFixed(2)}`.trim(); }
+  catch { return esc(`${cur || ''} ${v.toFixed(2)}`.trim()); }
 }
 function fdate(s) {
   if (!s) return '—';
@@ -517,6 +520,8 @@ function totals(q) {
   return { sub, desc, imp, total: r2(sub - desc + imp) };
 }
 const byId = (list, id) => list.find((x) => x.id === id);
+// Photos and signatures come from the database: only a real base64 image may reach an src attribute.
+const safeImg = (d) => (typeof d === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(d) ? d : '');
 const cliente = (id) => byId(S.clientes, id);
 const vehiculo = (id) => byId(S.vehiculos, id);
 const expired = (q) => q.estado === 'enviada' && q.validez && q.validez < today();
@@ -1024,7 +1029,7 @@ function editStaff(p) {
     ${self ? `<label class="field"><span>Rol</span><input value="${esc(ROLES[x.rol])}" disabled></label>` : select('f-rol', 'Rol', Object.entries(ROLES), x.rol)}
     ${input('f-telefono', 'Teléfono', x.telefono, { type: 'tel' })}
     ${p ? `<label class="field"><span>Correo de acceso</span><input value="${esc(x.correo || '')}" disabled></label>` : input('f-correo', 'Correo de acceso', '', { type: 'email', req: true, attrs: 'autocomplete="off"' })}
-    ${p ? '' : input('f-clave', 'Contraseña inicial (mín. 6 caracteres)', '', { type: 'text', req: true, attrs: 'autocomplete="off"' })}
+    ${p ? '' : input('f-clave', 'Contraseña inicial (mín. 8 caracteres)', '', { type: 'text', req: true, attrs: 'autocomplete="off"' })}
     ${self ? '' : `<label class="field span2" style="flex-direction:row;align-items:center;gap:8px"><input id="f-activo" type="checkbox" style="width:auto" ${x.activo !== false ? 'checked' : ''}> <span style="font-size:.95rem;color:var(--fg)">Usuario activo (puede entrar)</span></label>`}
     </div><p class="muted" style="margin:0;font-size:.88rem">${p ? 'Para cambiar la contraseña, la persona usa “¿Olvidaste tu contraseña?” en la pantalla de entrada y recibe un correo.' : 'Entrégale el correo y la contraseña inicial. Podrá cambiarla con “¿Olvidaste tu contraseña?”.'}</p><p class="err" id="f-err"></p>`,
   `${p && !self ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>${p ? 'Guardar usuario' : 'Crear usuario'}</button>`);
@@ -1039,7 +1044,7 @@ function editStaff(p) {
       else {
         const correo = val(sheet, 'f-correo').toLowerCase(), clave = val(sheet, 'f-clave');
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) throw { message: 'Escribe un correo válido.' };
-        if (clave.length < 6) throw { message: 'La contraseña debe tener al menos 6 caracteres.' };
+        if (clave.length < 8) throw { message: 'La contraseña debe tener al menos 8 caracteres.' };
         const uid = await createAccount(correo, clave);
         await save('personal', uid, { ...data, correo, creado: new Date().toISOString() });
       }
@@ -1063,7 +1068,8 @@ function authErr(e) {
   const m = {
     'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
     'auth/invalid-email': 'El correo no es válido.',
-    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/weak-password': 'La contraseña no cumple los requisitos de seguridad: usa al menos 8 caracteres con letras y números.',
+    'auth/password-does-not-meet-requirements': 'La contraseña no cumple los requisitos de seguridad: usa al menos 8 caracteres con letras y números.',
     'auth/invalid-credential': 'Correo o contraseña incorrectos.',
     'auth/wrong-password': 'Correo o contraseña incorrectos.',
     'auth/user-not-found': 'Correo o contraseña incorrectos.',
@@ -1215,7 +1221,7 @@ function showQuote(id) {
     const c = cliente(q.clienteId), v = vehiculo(q.vehiculoId), t = totals(q), tec = byId(S.personal, q.tecnico);
     const body = `<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
         <div style="display:flex;gap:10px;align-items:center">${pill(q)}<span class="muted" style="font-size:.88rem">Creada ${fdate(q.creada)}${q.enviada ? ` · enviada ${fdate(q.enviada)}` : ''}${q.respondida ? ` · respuesta ${fdate(q.respondida)}` : ''}</span></div>
-        ${S.canWrite ? `<label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>Estado</span><select id="q-estado-set" style="width:auto">${Object.entries(ESTADOS).map(([k, l]) => `<option value="${k}" ${k === q.estado ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}
+        ${S.canWrite && (q.estado !== 'aprobada' || S.canDelete) ? `<label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>Estado</span><select id="q-estado-set" style="width:auto">${Object.entries(ESTADOS).map(([k, l]) => `<option value="${k}" ${k === q.estado ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : ''}
       </div>
       <div class="grid2"><div><h3>Cliente</h3>${c ? `<a href="#clientes" data-goto-client="${esc(c.id)}" class="strong">${esc(c.nombre)}</a><div class="muted mono" style="font-size:.88rem">${esc(c.telefono || 'sin WhatsApp')}</div><div class="muted" style="font-size:.88rem">${esc(c.correo || 'sin correo')}</div>` : '<span class="muted">Cliente eliminado</span>'}</div>
       <div><h3>Vehículo</h3>${v ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${brandLogo(v.marca)}${plate(v.placa)}<span>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</span><span class="mini-car">${carSvg(v.carroceria || guessBody(v.marca, v.modelo), colorHex(v.color), v.modelo)}</span></div>` : '<span class="muted">Sin vehículo</span>'}
@@ -1274,7 +1280,7 @@ function showQuote(id) {
     };
     $('[data-goto-client]', s)?.addEventListener('click', (e) => { e.preventDefault(); showClient(c.id); });
     if (!S.canWrite) return;
-    $('#q-estado-set', s).onchange = async (e) => {
+    if ($('#q-estado-set', s)) $('#q-estado-set', s).onchange = async (e) => {
       const estado = e.target.value;
       const d = { estado };
       if (estado === 'aprobada' || estado === 'rechazada') d.respondida = new Date().toISOString();
@@ -1432,7 +1438,7 @@ function orderImages(id) {
 function lightbox(src) {
   const el = document.createElement('div');
   el.className = 'lightbox';
-  el.innerHTML = `<img src="${esc(src)}" alt="Foto de la recepción"><button class="btn small" aria-label="Cerrar">✕ Cerrar</button>`;
+  el.innerHTML = `<img src="${esc(safeImg(src))}" alt="Foto de la recepción"><button class="btn small" aria-label="Cerrar">✕ Cerrar</button>`;
   el.onclick = () => el.remove();
   document.body.appendChild(el);
 }
@@ -1499,7 +1505,7 @@ function showOrder(id) {
 
     if (r && (r.fotos || r.firma)) orderImages(id).then((imgs) => {
       const box = $('#ot-imgs', s); if (!box || !box.isConnected) return;
-      box.innerHTML = imgs.map((im) => `<button class="thumb ${im.tipo === 'firma' ? 'firma' : ''}" data-src="${esc(im.id)}" title="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto'}"><img src="${im.data}" alt="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto de la recepción'}"></button>`).join('') || '<span class="muted">Sin fotos.</span>';
+      box.innerHTML = imgs.map((im) => `<button class="thumb ${im.tipo === 'firma' ? 'firma' : ''}" data-src="${esc(im.id)}" title="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto'}"><img src="${safeImg(im.data)}" alt="${im.tipo === 'firma' ? 'Firma del cliente' : 'Foto de la recepción'}"></button>`).join('') || '<span class="muted">Sin fotos.</span>';
       box.onclick = (e) => { const b = e.target.closest('.thumb'); if (b) lightbox(imgs.find((im) => im.id === b.dataset.src).data); };
     });
     const msg = orderMessage(o);
@@ -1600,8 +1606,8 @@ ${v ? `<div><h3>Vehículo</h3><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio |
 ${o.motivo ? `<h3>Motivo de ingreso</h3><div>${esc(o.motivo).replace(/\n/g, '<br>')}</div>` : ''}
 <h3>Revisión</h3><table>${CHECKLIST.map(([k, l]) => { const st = r.checklist?.[k]; return `<tr><td>${esc(l)}</td><td class="${st === 'mal' ? 'mal' : ''}">${st === 'ok' ? 'Bien' : st === 'mal' ? 'Revisar' : st === 'na' ? 'N/A' : '—'}</td></tr>`; }).join('')}</table>
 ${r.obs ? `<h3>Observaciones</h3><div>${esc(r.obs).replace(/\n/g, '<br>')}</div>` : ''}
-${fotos.length ? `<h3>Fotos</h3><div class="fotos">${fotos.map((f) => `<img src="${f.data}" alt="Foto">`).join('')}</div>` : ''}
-<h3>Conformidad del cliente</h3><div class="firma">${firma ? `<img src="${firma.data}" alt="Firma">` : '<div style="height:60px;border-bottom:1px solid #1c2023;max-width:320px"></div>'}<div>${esc(r.firmante || '')}</div></div>
+${fotos.length ? `<h3>Fotos</h3><div class="fotos">${fotos.map((f) => `<img src="${safeImg(f.data)}" alt="Foto">`).join('')}</div>` : ''}
+<h3>Conformidad del cliente</h3><div class="firma">${firma ? `<img src="${safeImg(firma.data)}" alt="Firma">` : '<div style="height:60px;border-bottom:1px solid #1c2023;max-width:320px"></div>'}<div>${esc(r.firmante || '')}</div></div>
 <p class="muted" style="font-size:12px;margin-top:24px">El cliente declara que entrega el vehículo en el estado descrito.</p></main></body></html>`;
 }
 
@@ -1649,7 +1655,7 @@ function editReception(o) {
   const thumbs = () => {
     const vivas = existentes.filter((im) => im.tipo !== 'firma' && !state.quitar.has(im.id));
     $('#r-thumbs', sheet).innerHTML = [...vivas.map((im) => ({ key: 'e:' + im.id, data: im.data })), ...state.fotos.map((d, i) => ({ key: 'n:' + i, data: d }))]
-      .map((f) => `<span class="thumb"><img src="${f.data}" alt="Foto"><button type="button" class="x" data-key="${f.key}" aria-label="Quitar foto">✕</button></span>`).join('') || '<span class="muted">Sin fotos todavía.</span>';
+      .map((f) => `<span class="thumb"><img src="${safeImg(f.data)}" alt="Foto"><button type="button" class="x" data-key="${f.key}" aria-label="Quitar foto">✕</button></span>`).join('') || '<span class="muted">Sin fotos todavía.</span>';
     return vivas.length + state.fotos.length;
   };
   $('#r-thumbs', sheet).onclick = (e) => {
@@ -1672,8 +1678,8 @@ function editReception(o) {
   const drawSign = () => {
     const box = $('#r-sign', sheet); if (!box) return;
     if (!state.firmar && state.firmaExistente) {
-      box.innerHTML = `<div class="sign-saved"><img src="${state.firmaExistente.data}" alt="Firma guardada"></div><button type="button" class="btn small" id="r-resign">Firmar de nuevo</button>`;
-      $('#r-resign', box).onclick = () => { state.firmar = true; drawSign(); };
+      box.innerHTML = `<div class="sign-saved"><img src="${safeImg(state.firmaExistente.data)}" alt="Firma guardada"></div>${S.canDelete ? '<button type="button" class="btn small" id="r-resign">Firmar de nuevo</button>' : '<p class="muted" style="margin:0;font-size:.85rem">Solo administración o recepción pueden reemplazar la firma.</p>'}`;
+      $('#r-resign', box)?.addEventListener('click', () => { state.firmar = true; drawSign(); });
       return;
     }
     box.innerHTML = '<canvas class="sign-pad" id="r-pad"></canvas><div class="toolbar" style="margin-top:6px"><span class="muted" style="font-size:.85rem">Firme dentro del recuadro.</span><button type="button" class="btn small" id="r-clear">Borrar firma</button></div>';
@@ -1750,7 +1756,8 @@ async function showPublic(token) {
   const paint = (html) => { root.innerHTML = `<div class="public-wrap">${html}</div>`; };
   paint('<div class="empty"><strong>Cargando cotización…</strong></div>');
   let d;
-  try { const snap = await S.db.doc('publicas/' + token).get(); d = snap.exists ? snap.data() : null; } catch { d = undefined; }
+  if (!token) d = null;
+  else try { const snap = await S.db.doc('publicas/' + token).get(); d = snap.exists ? snap.data() : null; } catch { d = undefined; }
   if (d === undefined) return paint('<div class="empty"><strong>No se pudo cargar la cotización</strong><span>Revisa tu conexión a internet y vuelve a abrir el enlace.</span></div>');
   if (!d) return paint('<div class="empty"><strong>No encontramos esta cotización</strong><span>Puede que el enlace esté incompleto. Pide al taller que te lo envíe de nuevo.</span></div>');
   S.config = { ...S.config, ...d.taller };
@@ -1866,7 +1873,9 @@ function fotoModelo(marca, modelo) {
         if (!r.ok) continue;
         const d = await r.json();
         if (d.type !== 'standard' || !d.thumbnail?.source || !CAR_WORDS.test(`${d.description || ''} ${d.extract || ''}`)) continue;
-        v = { src: d.thumbnail.source, page: d.content_urls?.desktop?.page || '' };
+        if (!/^https:\/\/upload\.wikimedia\.org\//.test(d.thumbnail.source)) continue;
+        const page = d.content_urls?.desktop?.page || '';
+        v = { src: d.thumbnail.source, page: /^https:\/\/[a-z]+\.wikipedia\.org\//.test(page) ? page : '' };
         break;
       } catch { netFail = true; }
     }
@@ -1908,12 +1917,12 @@ function showAuth(mode) {
       <form class="panel panel-pad" id="setup-form" novalidate>
         ${input('s-taller', 'Nombre del taller', '', { req: true })}${input('s-nombre', 'Tu nombre', '', { req: true })}
         ${input('s-correo', 'Correo', '', { type: 'email', req: true, attrs: 'autocomplete="username"' })}
-        ${input('s-clave', 'Contraseña (mín. 6 caracteres)', '', { type: 'password', req: true, attrs: 'autocomplete="new-password"' })}
+        ${input('s-clave', 'Contraseña (mín. 8 caracteres)', '', { type: 'password', req: true, attrs: 'autocomplete="new-password"' })}
         <p class="err" id="a-err"></p><button class="btn primary" type="submit">Crear cuenta de administrador</button></form>`;
     $('#setup-form').onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target, taller = val(f, 's-taller'), nombre = val(f, 's-nombre'), correo = val(f, 's-correo').toLowerCase(), clave = val(f, 's-clave');
-      if (!taller || !nombre || !correo || clave.length < 6) { $('#a-err').textContent = 'Completa todos los campos. La contraseña necesita al menos 6 caracteres.'; return; }
+      if (!taller || !nombre || !correo || clave.length < 8) { $('#a-err').textContent = 'Completa todos los campos. La contraseña necesita al menos 8 caracteres.'; return; }
       $('button[type=submit]', f).disabled = true;
       try {
         settingUp = true;
@@ -1988,16 +1997,23 @@ async function enter(u) {
   }, () => {}));
 }
 
-function start() {
+function loadScript(src) {
+  return new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
+}
+async function start() {
   const initial = (location.hash || '').slice(1);
   go(VIEWS.includes(initial) ? initial : 'inicio');
   if (!window.firebase) { S.offline = true; renderView(true); return; }
   firebase.initializeApp(FIREBASE_CONFIG);
+  if (APP_CHECK_KEY) {
+    try { await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js'); firebase.appCheck().activate(APP_CHECK_KEY, true); }
+    catch { /* without App Check the page still works while enforcement is off */ }
+  }
   S.db = firebase.firestore();
   S.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
   $('#logout').onclick = () => firebase.auth().signOut();
   const publico = new URLSearchParams(location.search).get('c');
-  if (publico) { showPublic(publico); return; }
+  if (publico !== null) { showPublic(/^[A-Za-z0-9_-]{16,64}$/.test(publico) ? publico : ''); return; }
   firebase.auth().onAuthStateChanged(async (u) => {
     unsubs.forEach((f) => f()); unsubs = [];
     Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], me: null, myId: null, ready: false });

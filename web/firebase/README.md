@@ -4,6 +4,12 @@
 `taller-automotriz-38ab1`) y cada persona entra con correo y contraseña. Funciona en cualquier
 hosting estático y en el celular (se puede "Agregar a la pantalla de inicio").
 
+## Publicar una versión nueva
+
+`python3 empaquetar.py` crea `taller.zip` con `index.html`, la app instalable y `_headers` (las cabeceras de
+seguridad para Netlify, con las huellas de los scripts de esta versión). Sube ese zip completo: si se sube
+solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga.
+
 ## Puesta en marcha (una sola vez)
 
 1. **Authentication** → Métodos de acceso → activar **Correo electrónico/contraseña**.
@@ -46,3 +52,14 @@ registrada y activa en "Usuarios" no puede leer ni escribir nada.
 `manifest.webmanifest`, `sw.js` e `icons/` hacen que la página se instale como app (ícono propio, pantalla
 completa, abre sin internet). Al publicar una versión nueva de `index.html`, la app la toma sola la próxima vez
 que se abre con internet. Si cambian los íconos u otros archivos, sube también `sw.js` con `VERSION` actualizado.
+
+## Seguridad
+
+- **Reglas de Firestore** (`firestore.rules`): solo el personal activo lee o escribe; los pagos registrados,
+  la firma del cliente y las cotizaciones aprobadas solo los cambian administración o recepción; las fotos solo
+  aceptan imágenes reales; el enlace público solo permite responder una vez.
+- **Página**: todo dato se escapa antes de mostrarse y las imágenes se validan antes de usarse.
+- **Cabeceras** (`_headers`): CSP con huellas de los scripts (bloquea código inyectado y el envío de datos a
+  otros sitios), sin marcos (anti-clickjacking), `nosniff`, HSTS y permisos del navegador limitados a la cámara.
+- **App Check** (opcional): poner la clave de reCAPTCHA v3 en `APP_CHECK_KEY` y activar la aplicación en
+  Firebase → App Check, para que solo esta página pueda usar la base de datos y el inicio de sesión.

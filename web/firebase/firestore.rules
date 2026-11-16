@@ -11,6 +11,8 @@ service cloud.firestore {
     function role() { return get(staffDoc(request.auth.uid)).data.rol; }
     function admin() { return staff() && role() == 'admin'; }
     function canDelete() { return staff() && role() in ['admin', 'recepcion']; }
+    // Fotos y firma: solo imágenes reales en base64, sin texto que pueda esconder código.
+    function isImage(d) { return d is string && d.size() < 900000 && d.matches('^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$'); }
 
     // Marca de que el administrador ya fue creado. Se puede leer sin sesión para saber si mostrar la configuración inicial.
     match /config/setup {
@@ -36,13 +38,34 @@ service cloud.firestore {
     }
 
     match /{col}/{id} {
-      allow read, create, update: if staff() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
-      allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'cotizaciones', 'ordenes'];
+      allow read, create, update: if staff() && col in ['clientes', 'vehiculos'];
+      allow delete: if canDelete() && col in ['clientes', 'vehiculos'];
     }
 
-    // Fotos y firma de la recepción de cada orden.
+    // Una cotización aprobada solo la modifican administración o recepción; el resto solo puede vincularla.
+    match /cotizaciones/{id} {
+      allow read, create: if staff();
+      allow update: if canDelete()
+        || (staff() && (resource.data.get('estado', '') != 'aprobada'
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ordenId', 'token'])));
+      allow delete: if canDelete();
+    }
+
+    // Los pagos registrados no se pueden borrar ni cambiar, salvo administración o recepción.
+    match /ordenes/{id} {
+      allow read, create: if staff();
+      allow update: if canDelete()
+        || (staff() && (!('pagos' in resource.data)
+            || (request.resource.data.pagos is list && request.resource.data.pagos.hasAll(resource.data.pagos))));
+      allow delete: if canDelete();
+    }
+
+    // Fotos y firma de la recepción de cada orden. La firma del cliente no se reemplaza ni se borra salvo
+    // administración o recepción.
     match /ordenes/{id}/imagenes/{img} {
-      allow read, create, update: if staff();
+      allow read: if staff();
+      allow create: if staff() && isImage(request.resource.data.data);
+      allow update: if isImage(request.resource.data.data) && (canDelete() || (staff() && img != 'firma'));
       allow delete: if canDelete() || (staff() && img != 'firma');
     }
 
@@ -54,7 +77,8 @@ service cloud.firestore {
       allow update: if staff()
         || (resource.data.estado == 'enviada'
             && request.resource.data.estado in ['aprobada', 'rechazada']
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'respondida']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'respondida'])
+            && request.resource.data.respondida is string && request.resource.data.respondida.size() <= 40);
     }
   }
 }
