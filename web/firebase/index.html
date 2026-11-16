@@ -363,7 +363,7 @@ const S = {
   db: null, user: null, ready: false, offline: false,
   canWrite: true, canAdmin: false, canDelete: false, myId: null, me: null,
   clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [],
-  config: { nombre: 'Mi Taller', telefono: '', correo: '', direccion: '', moneda: 'USD', impuesto: 0, validez: 15, pie: 'Gracias por confiar en nosotros.' },
+  config: { nombre: 'Mi Taller', telefono: '', correo: '', direccion: '', moneda: 'USD', unidad: 'mi', impuesto: 0, validez: 15, pie: 'Gracias por confiar en nosotros.' },
   loaded: new Set(),
   view: 'inicio',
   q: { cotizaciones: '', estado: '', clientes: '', vehiculos: '' },
@@ -534,8 +534,13 @@ function vehicleLook(v) {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-// Money and numbers in El Salvador's format: $1,161.02 and 68,420 km.
+// Money and numbers in El Salvador's format: $1,161.02 and 68,420.
 const LOC = 'es-SV';
+// Odometer: each vehicle keeps its reading in miles or kilometers (imports from the US usually come in miles).
+const UNIDADES = { mi: 'Millas', km: 'Km' };
+const unidadDe = (v) => (v && UNIDADES[v.unidad] ? v.unidad : 'km'); // vehicles saved before this setting were entered in km
+const odo = (n, u) => (n === '' || n == null ? '' : `${Number(n).toLocaleString(LOC)} ${u}`);
+const odoEq = (n, u) => (n === '' || n == null ? '' : u === 'mi' ? `≈ ${Math.round(n * 1.609344).toLocaleString(LOC)} km` : `≈ ${Math.round(n / 1.609344).toLocaleString(LOC)} mi`);
 const r2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 const today = () => new Date().toISOString().slice(0, 10);
 const addDays = (d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10);
@@ -790,9 +795,9 @@ views.vehiculos = {
   },
 };
 function vehicleTable(list, showOwner) {
-  return `<div class="table-scroll"><table><thead><tr><th>Placa</th><th>Vehículo</th><th>Año</th>${showOwner ? '<th>Propietario</th>' : ''}<th class="num">Kilometraje</th></tr></thead><tbody>
+  return `<div class="table-scroll"><table><thead><tr><th>Placa</th><th>Vehículo</th><th>Año</th>${showOwner ? '<th>Propietario</th>' : ''}<th class="num">Odómetro</th></tr></thead><tbody>
     ${list.map((v) => `<tr class="row" data-open-vehicle="${esc(v.id)}"><td>${plate(v.placa)}</td><td><span class="veh-cell">${brandLogo(v.marca)}<span>${esc(v.marca)} ${esc(v.modelo)}${v.color ? ` <span class="muted">· ${esc(v.color)}</span>` : ''}</span></span></td>
-    <td class="muted">${esc(v.anio || '—')}</td>${showOwner ? `<td>${esc(cliente(v.clienteId)?.nombre || '—')}</td>` : ''}<td class="num mono">${v.km != null && v.km !== '' ? Number(v.km).toLocaleString(LOC) + ' km' : '—'}</td></tr>`).join('')}
+    <td class="muted">${esc(v.anio || '—')}</td>${showOwner ? `<td>${esc(cliente(v.clienteId)?.nombre || '—')}</td>` : ''}<td class="num mono">${odo(v.km, unidadDe(v)) || '—'}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
 
@@ -824,6 +829,7 @@ views.ajustes = {
       ${input('c-moneda', 'Moneda (código: USD, COP, MXN, PEN, CLP, EUR…)', c.moneda, { attrs: 'maxlength="3" style="text-transform:uppercase"' })}
       ${input('c-impuesto', 'Impuesto por defecto (%)', c.impuesto, { type: 'number', attrs: 'min="0" max="100" step="0.01"' })}
       ${input('c-validez', 'Validez de las cotizaciones (días)', c.validez, { type: 'number', attrs: 'min="1" step="1"' })}
+      ${select('c-unidad', 'Odómetro de los vehículos nuevos', [['mi', 'Millas'], ['km', 'Kilómetros']], c.unidad || 'mi')}
       ${input('c-pie', 'Nota al pie de las cotizaciones', c.pie, { area: true, span: true })}
     </div></fieldset><p class="err" id="cfg-err"></p>
     ${S.canAdmin ? '<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" type="submit">Guardar ajustes</button></div>' : ''}</form>
@@ -844,7 +850,7 @@ views.ajustes = {
       if (!nombre) { $('#cfg-err').textContent = 'Escribe el nombre del taller.'; return; }
       const moneda = val(f, 'c-moneda').toUpperCase() || 'USD';
       const data = { nombre, telefono: val(f, 'c-telefono'), correo: val(f, 'c-correo'), direccion: val(f, 'c-direccion'), moneda,
-        impuesto: Math.max(0, Math.min(100, Number(val(f, 'c-impuesto')) || 0)), validez: Math.max(1, parseInt(val(f, 'c-validez'), 10) || 15), pie: val(f, 'c-pie') };
+        impuesto: Math.max(0, Math.min(100, Number(val(f, 'c-impuesto')) || 0)), validez: Math.max(1, parseInt(val(f, 'c-validez'), 10) || 15), unidad: val(f, 'c-unidad') === 'km' ? 'km' : 'mi', pie: val(f, 'c-pie') };
       try { await S.db.doc('config/taller').set(data, { merge: true }); toast('Ajustes guardados'); $('#cfg-err').textContent = ''; }
       catch (err) { $('#cfg-err').textContent = dbErr(err); }
     };
@@ -963,7 +969,8 @@ function editVehicle(v, clienteId, after) {
     ${input('f-anio', 'Año', x.anio, { type: 'number', attrs: 'min="1900" max="2100"' })}
     <label class="field"><span>Carrocería</span><select id="f-carroceria">${Object.entries(CARROCERIAS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
     <div class="field span2"><span>Color</span><div class="swatches" id="f-swatches">${COLORES.map(([n, h]) => `<button type="button" class="sw" data-color="${esc(n)}" title="${esc(n)}" aria-label="${esc(n)}" style="background:${h}"></button>`).join('')}<button type="button" class="sw other" data-color="${OTRA}">Otro…</button></div><input id="f-color-otro" placeholder="Escribe el color" hidden></div>
-    ${input('f-km', 'Kilometraje', x.km, { type: 'number', attrs: 'min="0"' })}
+    <div class="field"><span>Odómetro</span><div class="toolbar" style="flex-wrap:nowrap"><input id="f-km" type="number" min="0" inputmode="numeric" value="${esc(x.km ?? '')}" style="flex:1;min-width:0">
+      <div class="seg" id="f-unidad">${Object.entries(UNIDADES).map(([k, l]) => `<button type="button" data-v="${k}">${l}</button>`).join('')}</div></div><span class="muted" id="km-eq" style="font-size:.8rem"></span></div>
     ${input('f-notas', 'Notas', x.notas, { area: true, span: true })}</div><p class="err" id="f-err"></p>`,
   `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar vehículo</button>`);
   $('[data-cancel]', sheet).onclick = closeSheet;
@@ -1015,6 +1022,15 @@ function editVehicle(v, clienteId, after) {
   sheet.addEventListener('change', (e) => { if (e.target === mSel || e.target === moSel) autoBody(); preview(); });
   sheet.addEventListener('input', (e) => { if (e.target === mOtra || e.target === moOtro) autoBody(); preview(); });
   paintSwatches(); preview();
+  // The switch says which unit the reading is in; it doesn't convert the number.
+  let unidad = v ? unidadDe(x) : (S.config.unidad || 'mi');
+  const paintUnidad = () => {
+    $$('#f-unidad button', sheet).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === unidad)));
+    const n = val(sheet, 'f-km'); $('#km-eq', sheet).textContent = n ? odoEq(Number(n), unidad) : '';
+  };
+  $('#f-unidad', sheet).onclick = (e) => { const b = e.target.closest('button'); if (b) { unidad = b.dataset.v; paintUnidad(); } };
+  $('#f-km', sheet).addEventListener('input', paintUnidad);
+  paintUnidad();
   $('#f-vin-btn', sheet).onclick = async (e) => {
     const vin = val(sheet, 'f-vin').toUpperCase().replace(/\s/g, ''), msg = $('#vin-msg', sheet);
     if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) { msg.textContent = 'El VIN tiene 17 caracteres: letras y números, sin I, O ni Q.'; return; }
@@ -1036,7 +1052,7 @@ function editVehicle(v, clienteId, after) {
     const placa = val(sheet, 'f-placa').toUpperCase().replace(/\s+/g, ' ');
     const d = { clienteId: val(sheet, 'f-cliente'), placa, marca: pick(mSel, mOtra), modelo: pick(moSel, moOtro),
       anio: val(sheet, 'f-anio') ? parseInt(val(sheet, 'f-anio'), 10) : '', color, carroceria: bodySel.value,
-      km: val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '', vin: val(sheet, 'f-vin').toUpperCase().replace(/\s/g, ''), notas: val(sheet, 'f-notas'), creado: x.creado || new Date().toISOString() };
+      km: val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '', unidad, vin: val(sheet, 'f-vin').toUpperCase().replace(/\s/g, ''), notas: val(sheet, 'f-notas'), creado: x.creado || new Date().toISOString() };
     if (!d.clienteId || !d.placa || !d.marca || !d.modelo) return void ($('#f-err').textContent = 'Completa propietario, placa, marca y modelo.');
     if (S.vehiculos.some((o) => o.id !== v?.id && (o.placa || '').toUpperCase() === placa)) return void ($('#f-err').textContent = `Ya existe un vehículo con la placa ${placa}.`);
     e.target.disabled = true;
@@ -1047,9 +1063,9 @@ function editVehicle(v, clienteId, after) {
 // Delivered work on a vehicle, newest first: date, mileage at reception and the jobs from its quote.
 function serviceHistory(os) {
   if (!os.length) return '<div class="empty"><span>Este vehículo aún no tiene órdenes de trabajo.</span></div>';
-  return `<div class="table-scroll"><table><thead><tr><th>Orden</th><th>Ingreso</th><th>Km</th><th>Trabajos</th><th>Estado</th><th class="num">Total</th></tr></thead><tbody>
+  return `<div class="table-scroll"><table><thead><tr><th>Orden</th><th>Ingreso</th><th>Odómetro</th><th>Trabajos</th><th>Estado</th><th class="num">Total</th></tr></thead><tbody>
     ${os.map((o) => { const q = otQuote(o); return `<tr class="row" data-open-order="${esc(o.id)}"><td class="mono strong">${esc(o.numero)}</td><td class="muted">${fdate(o.creada)}</td>
-      <td class="mono">${o.recepcion?.km !== '' && o.recepcion?.km != null ? Number(o.recepcion.km).toLocaleString(LOC) : '—'}</td>
+      <td class="mono">${odo(o.recepcion?.km, o.recepcion?.unidad || unidadDe(vehiculo(o.vehiculoId))) || '—'}</td>
       <td>${esc(q ? q.items.filter((i) => i.tipo === 'mano_obra').map((i) => i.desc).join(', ') || q.items.map((i) => i.desc).join(', ') : o.motivo || '—')}</td>
       <td>${otPill(o)}</td><td class="num">${q ? money(totals(q).total) : '—'}</td></tr>`; }).join('')}</tbody></table></div>`;
 }
@@ -1062,9 +1078,9 @@ function showVehicle(id) {
     const os = S.ordenes.filter((o) => o.vehiculoId === id);
     const body = `${vehicleLook(v)}<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">${plate(v.placa)}<span class="strong" style="font-size:1.1rem">${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</span></div>
       <dl class="dl"><dt>Propietario</dt><dd>${c ? `<a href="#clientes" data-goto-client="${esc(c.id)}">${esc(c.nombre)}</a>` : '—'}</dd>
-      <dt>Color</dt><dd>${esc(v.color || '—')}</dd><dt>Kilometraje</dt><dd class="mono">${v.km !== '' && v.km != null ? Number(v.km).toLocaleString(LOC) + ' km' : '—'}</dd>
+      <dt>Color</dt><dd>${esc(v.color || '—')}</dd><dt>Odómetro</dt><dd class="mono">${odo(v.km, unidadDe(v)) ? `${odo(v.km, unidadDe(v))} <span class="muted" style="font-family:var(--font-body);font-size:.85rem">${odoEq(v.km, unidadDe(v))}</span>` : '—'}</dd>
       <dt>VIN / serie</dt><dd class="mono">${esc(v.vin || '—')}</dd><dt>Notas</dt><dd>${esc(v.notas || '—')}</dd>
-      <dt>Próximo mantenimiento</dt><dd>${v.proximoServicio?.fecha ? `${fdate(v.proximoServicio.fecha)}${v.proximoServicio.km ? ` · ${Number(v.proximoServicio.km).toLocaleString(LOC)} km` : ''}${v.proximoServicio.nota ? ` · ${esc(v.proximoServicio.nota)}` : ''}${v.proximoServicio.avisado ? ' <span class="pill st-aprobada">Avisado</span>' : ''}` : '—'}
+      <dt>Próximo mantenimiento</dt><dd>${v.proximoServicio?.fecha ? `${fdate(v.proximoServicio.fecha)}${v.proximoServicio.km ? ` · ${odo(v.proximoServicio.km, unidadDe(v))}` : ''}${v.proximoServicio.nota ? ` · ${esc(v.proximoServicio.nota)}` : ''}${v.proximoServicio.avisado ? ' <span class="pill st-aprobada">Avisado</span>' : ''}` : '—'}
         ${S.canWrite ? ` <button class="btn small" data-next>${v.proximoServicio?.fecha ? 'Cambiar' : 'Programar'}</button>` : ''}</dd></dl>
       <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de servicios</h2></div>${serviceHistory(os)}</section>
       <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de cotizaciones</h2></div>${quoteTable(qs, 'Sin cotizaciones para este vehículo')}</section>`;
@@ -1288,7 +1304,7 @@ td{padding:8px 6px;border-bottom:1px solid #d9ddd9}.r{text-align:right;white-spa
 <header><div><h1>${esc(cfg.nombre)}</h1><div class="muted">${esc(cfg.direccion)}</div><div class="muted">${esc([cfg.telefono, cfg.correo].filter(Boolean).join(' · '))}</div></div>
 <div class="n"><b>COTIZACIÓN ${esc(q.numero)}</b><div class="muted">Fecha: ${esc(fdate(q.creada))}</div><div class="muted">Válida hasta: ${esc(fdate(q.validez))}</div></div></header>
 <div class="grid"><div><h3>Cliente</h3><b>${esc(c.nombre || '')}</b>${c.documento ? `<br>Doc.: ${esc(c.documento)}` : ''}${c.telefono ? `<br>${esc(c.telefono)}` : ''}${c.correo ? `<br>${esc(c.correo)}` : ''}</div>
-${v ? `<div><h3>Vehículo</h3><div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">${brandLogo(v.marca)}${carSvg(v.carroceria || guessBody(v.marca, v.modelo), colorHex(v.color), v.modelo)}</div><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</b><br>Placa <span class="plate">${esc(v.placa)}</span>${v.km !== '' && v.km != null ? `<br>Kilometraje: ${esc(Number(v.km).toLocaleString(LOC))} km` : ''}${v.color ? `<br>Color: ${esc(v.color)}` : ''}</div>` : ''}</div>
+${v ? `<div><h3>Vehículo</h3><div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">${brandLogo(v.marca)}${carSvg(v.carroceria || guessBody(v.marca, v.modelo), colorHex(v.color), v.modelo)}</div><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</b><br>Placa <span class="plate">${esc(v.placa)}</span>${odo(v.km, unidadDe(v)) ? `<br>Odómetro: ${esc(odo(v.km, unidadDe(v)))}` : ''}${v.color ? `<br>Color: ${esc(v.color)}` : ''}</div>` : ''}</div>
 <table><thead><tr><th>Descripción</th><th>Tipo</th><th class="r">Cant.</th><th class="r">Precio unit.</th><th class="r">Importe</th></tr></thead><tbody>
 ${q.items.map((i) => `<tr><td>${esc(i.desc)}</td><td class="muted">${TIPOS[i.tipo] || ''}</td><td class="r">${esc(i.cantidad)}</td><td class="r">${m(i.precio)}</td><td class="r">${m(i.cantidad * i.precio)}</td></tr>`).join('')}
 </tbody></table><div class="tot"><div><span>Subtotal</span><span>${m(t.sub)}</span></div>${t.desc ? `<div><span>Descuento</span><span>−${m(t.desc)}</span></div>` : ''}
@@ -1544,7 +1560,7 @@ function showOrder(id) {
         <div><h3>Motivo de ingreso</h3><p style="margin:0;white-space:pre-wrap">${esc(o.motivo || '—')}</p></div></div>
 
       <section class="panel panel-pad ot-section"><div class="sec-head"><h2>Recepción del vehículo</h2>${S.canWrite && r ? '<button class="btn small" id="ot-recep">Editar recepción</button>' : ''}</div>
-        ${r ? `<div class="grid2"><dl class="dl"><dt>Kilometraje</dt><dd class="mono">${r.km !== '' && r.km != null ? Number(r.km).toLocaleString(LOC) + ' km' : '—'}</dd>
+        ${r ? `<div class="grid2"><dl class="dl"><dt>Odómetro</dt><dd class="mono">${odo(r.km, r.unidad || unidadDe(v)) || '—'}</dd>
             <dt>Combustible</dt><dd>${fuelGauge(r.combustible)}</dd><dt>Recibido</dt><dd>${fdate(r.fecha)}${r.por ? ` por ${esc(quien(r.por))}` : ''}</dd>
             <dt>Entregó</dt><dd>${esc(r.firmante || '—')}</dd></dl>
           <div><h3>Revisión</h3>${problemas.length ? `<ul class="issues">${problemas.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '<p class="muted" style="margin:0">Sin observaciones en el checklist.</p>'}</div></div>
@@ -1703,7 +1719,7 @@ table{width:100%;border-collapse:collapse}td{padding:5px 6px;border-bottom:1px s
 <header><div><h1>${esc(cfg.nombre)}</h1><div class="muted">${esc([cfg.direccion, cfg.telefono].filter(Boolean).join(' · '))}</div></div><div style="text-align:right"><b>HOJA DE RECEPCIÓN ${esc(o.numero)}</b><div class="muted">${esc(fdate(r.fecha || o.creada))}</div></div></header>
 <div class="grid"><div><h3>Cliente</h3><b>${esc(c.nombre || '')}</b>${c.telefono ? `<br>${esc(c.telefono)}` : ''}</div>
 ${v ? `<div><h3>Vehículo</h3><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</b><br>Placa <span class="plate">${esc(v.placa)}</span>${v.color ? ` · ${esc(v.color)}` : ''}</div>` : ''}
-<div><h3>Ingreso</h3>Kilometraje: <b>${r.km !== '' && r.km != null ? esc(Number(r.km).toLocaleString(LOC)) + ' km' : '—'}</b><br>Combustible: <b>${esc(COMBUSTIBLE[r.combustible] || '—')}</b></div></div>
+<div><h3>Ingreso</h3>Odómetro: <b>${esc(odo(r.km, r.unidad || unidadDe(v)) || '—')}</b><br>Combustible: <b>${esc(COMBUSTIBLE[r.combustible] || '—')}</b></div></div>
 ${o.motivo ? `<h3>Motivo de ingreso</h3><div>${esc(o.motivo).replace(/\n/g, '<br>')}</div>` : ''}
 <h3>Revisión</h3><table>${CHECKLIST.map(([k, l]) => { const st = r.checklist?.[k]; return `<tr><td>${esc(l)}</td><td class="${st === 'mal' ? 'mal' : ''}">${st === 'ok' ? 'Bien' : st === 'mal' ? 'Revisar' : st === 'na' ? 'N/A' : '—'}</td></tr>`; }).join('')}</table>
 ${r.obs ? `<h3>Observaciones</h3><div>${esc(r.obs).replace(/\n/g, '<br>')}</div>` : ''}
@@ -1734,7 +1750,7 @@ function editReception(o) {
   const v = vehiculo(o.vehiculoId), r = o.recepcion || {};
   const state = { combustible: r.combustible ?? 2, checklist: { ...(r.checklist || {}) }, fotos: [], quitar: new Set(), firma: null, firmaExistente: null, firmar: !r.firma };
   const sheet = openSheet(`Recepción · ${o.numero}`, `
-    <div class="grid2">${input('r-km', 'Kilometraje', r.km ?? v?.km ?? '', { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
+    <div class="grid2">${input('r-km', `Odómetro (${UNIDADES[unidadDe(v)].toLowerCase()})`, r.km ?? v?.km ?? '', { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
       <div class="field"><span>Combustible</span><div class="seg" id="r-fuel">${COMBUSTIBLE.map((l, i) => `<button type="button" data-v="${i}">${l}</button>`).join('')}</div></div></div>
     <section><h3>Revisión del vehículo</h3><div class="checklist">${CHECKLIST.map(([k, l]) => `<div class="check-row"><span>${esc(l)}</span><div class="seg small" data-k="${k}">${CHECK_OPC.map(([ov, ol]) => `<button type="button" data-v="${ov}" class="o-${ov}">${ol}</button>`).join('')}</div></div>`).join('')}</div></section>
     ${input('r-obs', 'Observaciones (golpes, rayones, objetos dentro del vehículo)', r.obs || '', { area: true })}
@@ -1808,7 +1824,7 @@ function editReception(o) {
       if (state.firmar && state.firma && state.pad) { await S.db.doc(`${base}/firma`).set({ tipo: 'firma', data: state.pad.toDataURL('image/png'), creada: now }); hayFirma = true; }
       const fotos = existentes.filter((im) => im.tipo !== 'firma' && !state.quitar.has(im.id)).length + state.fotos.length;
       const km = val(sheet, 'r-km') ? parseInt(val(sheet, 'r-km'), 10) : '';
-      const recepcion = { km, combustible: state.combustible, checklist: state.checklist, obs: val(sheet, 'r-obs'), firmante: val(sheet, 'r-firmante'),
+      const recepcion = { km, unidad: unidadDe(v), combustible: state.combustible, checklist: state.checklist, obs: val(sheet, 'r-obs'), firmante: val(sheet, 'r-firmante'),
         fotos, firma: hayFirma, fecha: r.fecha || now, por: r.por || S.myId || '' };
       imgCache.delete(o.id);
       await patch('ordenes', o.id, { recepcion });
@@ -2007,7 +2023,7 @@ function citaMessage(c) {
 }
 function serviceMessage(v) {
   const cl = cliente(v.clienteId), p = v.proximoServicio || {}, cfg = S.config;
-  const cuando = [p.fecha ? `para el ${fdate(p.fecha)}` : '', p.km ? `a los ${Number(p.km).toLocaleString(LOC)} km` : ''].filter(Boolean).join(' o ');
+  const cuando = [p.fecha ? `para el ${fdate(p.fecha)}` : '', p.km ? `al llegar a ${unidadDe(v) === 'mi' ? `${Number(p.km).toLocaleString(LOC)} millas` : odo(p.km, 'km')}` : ''].filter(Boolean).join(' o ');
   return [`Hola ${cl?.nombre || ''}, te saluda ${cfg.nombre}.`,
     `Te recordamos que ${vehLabel(v)} tiene pendiente su mantenimiento${p.nota ? ` (${p.nota})` : ''}${cuando ? `, previsto ${cuando}` : ''}.`,
     '¿Te agendamos una cita? Responde con el día y la hora que te queden mejor.', [cfg.telefono, cfg.direccion].filter(Boolean).join(' · ')].filter(Boolean).join('\n\n');
@@ -2050,7 +2066,7 @@ views.agenda = {
     $('[data-part=mant]', root).innerHTML = `<h2 style="margin-bottom:10px">Mantenimientos por avisar</h2>${due.length ? due.map((v) => {
       const p = v.proximoServicio, vencido = p.fecha < hoy;
       return `<div class="mant"><button class="cita-main" data-open-vehicle="${esc(v.id)}"><span class="veh-cell">${brandLogo(v.marca)}${plate(v.placa)}</span>
-        <span class="cita-info"><strong>${esc(cliente(v.clienteId)?.nombre || '')}</strong><span class="muted">${esc(p.nota || 'Mantenimiento')} · ${fdate(p.fecha)}${p.km ? ` · ${Number(p.km).toLocaleString(LOC)} km` : ''}</span></span>
+        <span class="cita-info"><strong>${esc(cliente(v.clienteId)?.nombre || '')}</strong><span class="muted">${esc(p.nota || 'Mantenimiento')} · ${fdate(p.fecha)}${p.km ? ` · ${odo(p.km, unidadDe(v))}` : ''}</span></span>
         ${vencido ? '<span class="pill st-vencida">Vencido</span>' : ''}</button>
         ${S.canWrite ? `<div class="toolbar"><a class="btn small ok" target="_blank" rel="noopener" data-mant-wa="${esc(v.id)}" href="https://wa.me/${digits(cliente(v.clienteId)?.telefono)}?text=${encodeURIComponent(serviceMessage(v))}">Avisar por WhatsApp</a><button class="btn small" data-mant-cita="${esc(v.id)}">Agendar cita</button></div>` : ''}</div>`;
     }).join('') : '<p class="muted" style="margin:0">Ningún vehículo tiene mantenimiento en los próximos 30 días. Prográmalos desde la ficha del vehículo o al entregar una orden.</p>'}`;
@@ -2123,7 +2139,7 @@ function editNextService(v, after) {
   const p = v.proximoServicio || {};
   const sheet = openSheet(`Próximo mantenimiento · ${v.placa}`, `<div class="grid2">
       ${input('f-fecha', 'Fecha', p.fecha || shiftDate(localDate(), 180), { type: 'date' })}
-      ${input('f-km', 'O al llegar a (km)', p.km ?? (v.km !== '' && v.km != null ? Number(v.km) + 5000 : ''), { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
+      ${input('f-km', `O al llegar a (${UNIDADES[unidadDe(v)].toLowerCase()})`, p.km ?? (v.km !== '' && v.km != null ? Number(v.km) + (unidadDe(v) === 'mi' ? 3000 : 5000) : ''), { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
       ${input('f-nota', 'Qué toca hacer', p.nota || '', { span: true, attrs: 'placeholder="Ej: Cambio de aceite y filtros"' })}
     </div><p class="muted" style="margin:0;font-size:.88rem">Aparecerá en Agenda → Mantenimientos por avisar 30 días antes de la fecha.</p><p class="err" id="f-err"></p>`,
   `${p.fecha ? '<button class="btn danger" data-clear>Quitar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar</button>`);
@@ -2308,7 +2324,7 @@ async function makePdf() {
     } catch { /* the drawing is decorative */ }
     y += 46;
     return P.block(x, w, '', [[`${v.marca} ${v.modelo} ${v.anio || ''}`, true], [`Placa ${v.placa}`], [v.color ? `Color: ${v.color}` : ''],
-      [v.km !== '' && v.km != null ? `Kilometraje: ${Number(v.km).toLocaleString(LOC)} km` : '']], y - 13);
+      [odo(v.km, unidadDe(v)) ? `Odómetro: ${odo(v.km, unidadDe(v))}` : '']], y - 13);
   };
   P.finish = (foot) => {
     const n = doc.getNumberOfPages();
@@ -2400,7 +2416,7 @@ async function receptionPdf(o, imgs) {
   const P = await makePdf(), { M, W } = P;
   P.header(e ? 'RECEPCIÓN Y ENTREGA' : 'HOJA DE RECEPCIÓN', o.numero, [`Ingreso: ${fdate(r.fecha || o.creada)}`, ...(e ? [`Entrega: ${fdate(e.fecha)}`] : [])]);
   const y0 = P.y, colW = (W - 2 * M - 30) / 2;
-  const yA = P.block(M, colW, 'Cliente', [[c.nombre, true], [c.telefono], [' '], [`Kilometraje: ${r.km !== '' && r.km != null ? Number(r.km).toLocaleString(LOC) + ' km' : '-'}`], [`Combustible: ${COMBUSTIBLE[r.combustible] || '-'}`]], y0);
+  const yA = P.block(M, colW, 'Cliente', [[c.nombre, true], [c.telefono], [' '], [`Odómetro: ${odo(r.km, r.unidad || unidadDe(v)) || '-'}`], [`Combustible: ${COMBUSTIBLE[r.combustible] || '-'}`]], y0);
   const yB = await P.vehicleBlock(v, M + colW + 30, y0, colW);
   P.y = Math.max(yA, yB) + 14;
   P.para('Motivo de ingreso', o.motivo);
@@ -2507,16 +2523,16 @@ function backupSheets() {
   return [
     { name: 'Clientes', cols: ['Nombre', 'Documento', 'Teléfono', 'Correo', 'Dirección', 'Vehículos', 'Notas', 'Registrado'], widths: [28, 16, 16, 26, 26, 10, 30, 14],
       rows: S.clientes.map((c) => [c.nombre, c.documento || '', c.telefono || '', c.correo || '', c.direccion || '', S.vehiculos.filter((v) => v.clienteId === c.id).length, c.notas || '', d(c.creado)]) },
-    { name: 'Vehículos', cols: ['Placa', 'Marca', 'Modelo', 'Año', 'Color', 'Kilometraje', 'VIN', 'Propietario', 'Próximo mantenimiento', 'Notas'], widths: [12, 14, 18, 8, 12, 12, 20, 26, 30, 30],
-      rows: S.vehiculos.map((v) => [v.placa, v.marca, v.modelo, Number(v.anio) || '', v.color || '', v.km === '' || v.km == null ? '' : Number(v.km), v.vin || '', cn(v.clienteId),
+    { name: 'Vehículos', cols: ['Placa', 'Marca', 'Modelo', 'Año', 'Color', 'Odómetro', 'Unidad', 'VIN', 'Propietario', 'Próximo mantenimiento', 'Notas'], widths: [12, 14, 18, 8, 12, 12, 8, 20, 26, 30, 30],
+      rows: S.vehiculos.map((v) => [v.placa, v.marca, v.modelo, Number(v.anio) || '', v.color || '', v.km === '' || v.km == null ? '' : Number(v.km), unidadDe(v), v.vin || '', cn(v.clienteId),
         v.proximoServicio?.fecha ? `${d(v.proximoServicio.fecha)}${v.proximoServicio.nota ? ' · ' + v.proximoServicio.nota : ''}` : '', v.notas || '']) },
     { name: 'Cotizaciones', cols: ['Número', 'Fecha', 'Cliente', 'Placa', 'Estado', 'Subtotal', 'Descuento', 'Impuesto', 'Total', 'Orden'], widths: [12, 14, 26, 12, 12, 12, 12, 12, 12, 12],
       rows: S.cotizaciones.map((q) => { const t = totals(q); return [q.numero, d(q.creada), cn(q.clienteId), pl(q.vehiculoId), ESTADOS[q.estado] || q.estado, t.sub, t.desc, t.imp, t.total, byId(S.ordenes, q.ordenId)?.numero || '']; }) },
     { name: 'Líneas de cotización', cols: ['Cotización', 'Tipo', 'Descripción', 'Cantidad', 'Precio unitario', 'Importe'], widths: [12, 14, 40, 10, 14, 12],
       rows: S.cotizaciones.flatMap((q) => (q.items || []).map((i) => [q.numero, TIPOS[i.tipo] || i.tipo, i.desc, i.cantidad, i.precio, r2(i.cantidad * i.precio)])) },
-    { name: 'Órdenes', cols: ['Número', 'Ingreso', 'Cliente', 'Placa', 'Estado', 'Mecánico', 'Motivo', 'Km recepción', 'Total', 'Pagado', 'Saldo', 'Entregada'], widths: [12, 14, 26, 12, 18, 18, 34, 12, 12, 12, 12, 14],
+    { name: 'Órdenes', cols: ['Número', 'Ingreso', 'Cliente', 'Placa', 'Estado', 'Mecánico', 'Motivo', 'Odómetro recepción', 'Total', 'Pagado', 'Saldo', 'Entregada'], widths: [12, 14, 26, 12, 18, 18, 34, 12, 12, 12, 12, 14],
       rows: S.ordenes.map((o) => [o.numero, d(o.creada), cn(o.clienteId), pl(o.vehiculoId), OT_ESTADOS[o.estado] || o.estado, quien(o.tecnico), o.motivo || '',
-        o.recepcion?.km === '' || o.recepcion?.km == null ? '' : Number(o.recepcion.km), otTotal(o), otPagado(o), otSaldo(o), d(o.entregada)]) },
+        odo(o.recepcion?.km, o.recepcion?.unidad || unidadDe(vehiculo(o.vehiculoId))), otTotal(o), otPagado(o), otSaldo(o), d(o.entregada)]) },
     { name: 'Pagos', cols: ['Fecha', 'Orden', 'Cliente', 'Método', 'Monto', 'Nota', 'Registró'], widths: [14, 12, 26, 14, 12, 26, 20],
       rows: S.ordenes.flatMap((o) => (o.pagos || []).map((p) => [d(p.fecha), o.numero, cn(o.clienteId), METODOS[p.metodo] || p.metodo, p.monto, p.nota || '', quien(p.por)])) },
     { name: 'Citas', cols: ['Fecha', 'Hora', 'Cliente', 'Placa', 'Motivo', 'Estado'], widths: [14, 8, 26, 12, 34, 12],

@@ -39,7 +39,7 @@ solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga
 Documentos y respaldo: **PDF** de la cotización, del recibo de cada pago (también como mensaje de WhatsApp) y de la
 hoja de recepción y entrega (con fotos de antes y después y las firmas); en el celular se comparten directo a
 WhatsApp. **Respaldo** en Excel (una hoja por tipo de dato) y en JSON desde Ajustes, con recordatorio semanal en
-Inicio. Los montos usan el formato de El Salvador ($1,161.02).
+Inicio. Los montos usan el formato de El Salvador ($1,161.02) y cada vehículo guarda su odómetro en millas o kilómetros (interruptor en el formulario; unidad por defecto en Ajustes).
 
 Otras ayudas: **búsqueda general** (botón de lupa o tecla `/`: clientes con todos sus vehículos, placas, VIN,
 órdenes y cotizaciones), **paquetes de servicios** en Ajustes para agregar a una cotización con un toque, y
