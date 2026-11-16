@@ -271,6 +271,7 @@ img { max-width: 100%; }
 .public-wrap { max-width: 760px; margin: 0 auto; }
 .topbar .wrap { max-width: 1400px; }
 @media (max-width: 480px) { .hide-sm { display: none; } }
+@media (min-width: 1181px) and (max-width: 1499px) { #who-name { display: none; } .tab { padding-left: 10px; padding-right: 10px; } }
 .ok-notice { background: var(--ok-soft); color: var(--ok); }
 /* Global search */
 .gsearch { position: fixed; inset: 0; z-index: 45; background: rgb(10 12 14 / .5); display: flex; justify-content: center; align-items: flex-start; padding: calc(8vh + env(safe-area-inset-top, 0px)) 16px 16px; }
@@ -2315,6 +2316,7 @@ async function enter(u) {
   S.canDelete = S.me.rol === 'admin' || S.me.rol === 'recepcion';
   $('#auth').hidden = true; $('#who').hidden = false;
   $('#who-name').textContent = S.me.nombre || u.email;
+  $('#logout').title = `Salir (${S.me.nombre || u.email})`;
   renderView(true);
   unsubs.push(S.db.doc('config/taller').onSnapshot((d) => { if (d.exists) { S.config = { ...S.config, ...d.data() }; onData(); } }, () => {}));
   unsubs.push(S.db.doc('personal/' + u.uid).onSnapshot((d) => {
