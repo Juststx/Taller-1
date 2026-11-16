@@ -38,8 +38,14 @@ service cloud.firestore {
     }
 
     match /{col}/{id} {
-      allow read, create, update: if staff() && col in ['clientes', 'vehiculos'];
-      allow delete: if canDelete() && col in ['clientes', 'vehiculos'];
+      allow read, create, update: if staff() && col in ['clientes', 'vehiculos', 'citas'];
+      allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'citas'];
+    }
+
+    // Paquetes de servicios: todos los usan, administración y recepción los editan.
+    match /paquetes/{id} {
+      allow read: if staff();
+      allow write: if canDelete();
     }
 
     // Una cotización aprobada solo la modifican administración o recepción; el resto solo puede vincularla.

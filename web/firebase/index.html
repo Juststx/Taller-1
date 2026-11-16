@@ -272,6 +272,33 @@ img { max-width: 100%; }
 .topbar .wrap { max-width: 1400px; }
 @media (max-width: 480px) { .hide-sm { display: none; } }
 .ok-notice { background: var(--ok-soft); color: var(--ok); }
+/* Global search */
+.gsearch { position: fixed; inset: 0; z-index: 45; background: rgb(10 12 14 / .5); display: flex; justify-content: center; align-items: flex-start; padding: calc(8vh + env(safe-area-inset-top, 0px)) 16px 16px; }
+.gsearch-box { width: min(640px, 100%); max-height: 80vh; background: var(--bg); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgb(0 0 0 / .35); }
+.gsearch-head { display: flex; gap: 8px; padding: 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.gsearch-head input { font-size: 1.05rem; padding: 10px 12px; }
+.gsearch-res { overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.gsearch-res h3 { margin: 8px 0 2px; }
+.gs-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.gs-main { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; text-align: left; background: none; border: 0; padding: 10px 12px; cursor: pointer; color: var(--fg); font: inherit; }
+.gs-main:hover, .gs-chip:hover { background: var(--sunken); }
+.gs-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+.gs-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 3px 10px 3px 4px; cursor: pointer; color: var(--fg); font: inherit; font-size: .88rem; }
+.gs-chip .logo { width: 24px; height: 24px; }
+.gs-chip .logo svg { width: 15px; height: 15px; }
+@media (max-width: 1180px) { .search-btn + .theme-btn { margin-left: 0; } }
+/* Agenda */
+.ag-day { border-top: 1px solid var(--line); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.ag-day h3 { margin: 0; }
+.ag-day.today h3 { color: var(--accent); }
+.ag-empty { margin: 0; font-size: .88rem; }
+.cita, .mant { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 4px 8px 4px 4px; }
+.cita.off { opacity: .55; }
+.mant { flex-direction: column; align-items: stretch; padding: 6px; margin-bottom: 8px; }
+.cita-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 6px; cursor: pointer; color: var(--fg); font: inherit; text-align: left; flex-wrap: wrap; }
+.cita-hora { font-weight: 600; min-width: 74px; }
+.cita-info { flex: 1; min-width: 150px; display: flex; flex-direction: column; }
+.cita-info .muted { font-size: .86rem; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -287,6 +314,7 @@ img { max-width: 100%; }
       </div>
       <span class="brand-name" id="brand">Taller</span>
     </div>
+    <button class="theme-btn search-btn" id="search-btn" type="button" aria-label="Buscar" title="Buscar (tecla /)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></button>
     <button class="theme-btn" id="theme-btn" type="button"></button>
     <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="menu-label">Inicio</span></button>
     <div class="nav-wrap" id="nav-wrap">
@@ -294,6 +322,7 @@ img { max-width: 100%; }
       <button class="tab" data-view="inicio">Inicio</button>
       <button class="tab" data-view="cotizaciones">Cotizaciones</button>
       <button class="tab" data-view="ordenes">Órdenes</button>
+      <button class="tab" data-view="agenda">Agenda</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="vehiculos">Vehículos</button>
       <button class="tab" data-view="reportes">Reportes</button>
@@ -328,13 +357,13 @@ const APP_CHECK_KEY = '';
 const S = {
   db: null, user: null, ready: false, offline: false,
   canWrite: true, canAdmin: false, canDelete: false, myId: null, me: null,
-  clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [],
+  clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [],
   config: { nombre: 'Mi Taller', telefono: '', correo: '', direccion: '', moneda: 'USD', impuesto: 0, validez: 15, pie: 'Gracias por confiar en nosotros.' },
   loaded: new Set(),
   view: 'inicio',
   q: { cotizaciones: '', estado: '', clientes: '', vehiculos: '' },
 };
-const VIEWS = ['inicio', 'cotizaciones', 'ordenes', 'clientes', 'vehiculos', 'reportes', 'personal', 'ajustes'];
+const VIEWS = ['inicio', 'cotizaciones', 'ordenes', 'agenda', 'clientes', 'vehiculos', 'reportes', 'personal', 'ajustes'];
 const ESTADOS = { borrador: 'Borrador', enviada: 'Enviada', aprobada: 'Aprobada', rechazada: 'Rechazada' };
 const TIPOS = { mano_obra: 'Mano de obra', repuesto: 'Repuesto', otro: 'Otro' };
 const ROLES = { admin: 'Administrador', recepcion: 'Recepción', mecanico: 'Mecánico' };
@@ -660,6 +689,7 @@ views.inicio = {
   shell: () => `${banner()}<div class="head"><div><h1 id="hello">Inicio</h1><p class="sub">Resumen del taller al día de hoy.</p></div>
     <div class="toolbar">${S.canWrite ? '<button class="btn primary" data-act="new-quote">+ Nueva cotización</button>' : ''}</div></div>
     <div data-part="stats"></div>
+    <section class="panel panel-pad" style="margin-bottom:16px"><div class="head" style="margin:0 0 8px"><h2>Citas de hoy</h2><div class="toolbar">${S.canWrite ? '<button class="btn small" data-act="new-cita">+ Nueva cita</button>' : ''}<button class="btn small" data-goto="agenda">Ver agenda</button></div></div><div data-part="hoy"></div></section>
     <section class="panel" style="margin-bottom:16px"><div class="panel-pad head" style="margin:0;padding-bottom:0"><h2>En el taller</h2>${S.canWrite ? '<button class="btn small" data-act="new-order">+ Nueva orden</button>' : ''}</div><div data-part="taller"></div></section>
     <div class="two-col"><section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Cotizaciones recientes</h2></div><div data-part="recent"></div></section>
     <section class="panel panel-pad"><h2 style="margin-bottom:10px">Por responder</h2><div data-part="pending"></div></section></div>`,
@@ -677,6 +707,10 @@ views.inicio = {
       <div class="stat hl"><span class="label">Cobrado este mes</span><span class="value" style="font-size:1.5rem">${money(S.ordenes.flatMap((o) => o.pagos || []).filter((p) => localMonth(p.fecha) === mes).reduce((s, p) => s + p.monto, 0))}</span></div>
       <div class="stat"><span class="label">Aprobado este mes</span><span class="value" style="font-size:1.5rem">${money(aprobMes)}</span><span class="muted" style="font-size:.82rem">Total histórico ${money(aprob)}</span></div>
     </div>`;
+    const citasHoy = S.citas.filter((c) => c.fecha === localDate() && c.estado !== 'cancelada');
+    const due = maintenanceDue().length;
+    $('[data-part=hoy]', root).innerHTML = (citasHoy.length ? citasHoy.map(citaRow).join('') : '<p class="muted" style="margin:0">No hay citas para hoy.</p>')
+      + (due ? `<p style="margin:8px 0 0"><button class="btn small" data-goto="agenda">${due} mantenimiento${due === 1 ? '' : 's'} por avisar</button></p>` : '');
     $('[data-part=taller]', root).innerHTML = orderTable(S.ordenes.filter(activa), loading() ? 'Cargando órdenes…' : 'No hay vehículos en el taller ahora mismo.');
     $('[data-part=recent]', root).innerHTML = quoteTable(qs.slice(0, 8), loading() ? 'Cargando cotizaciones…' : null);
     const pend = qs.filter((q) => q.estado === 'enviada').sort((a, b) => (a.validez || '').localeCompare(b.validez || ''));
@@ -784,7 +818,8 @@ views.ajustes = {
       ${input('c-validez', 'Validez de las cotizaciones (días)', c.validez, { type: 'number', attrs: 'min="1" step="1"' })}
       ${input('c-pie', 'Nota al pie de las cotizaciones', c.pie, { area: true, span: true })}
     </div></fieldset><p class="err" id="cfg-err"></p>
-    ${S.canAdmin ? '<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" type="submit">Guardar ajustes</button></div>' : ''}</form>`;
+    ${S.canAdmin ? '<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" type="submit">Guardar ajustes</button></div>' : ''}</form>
+    <section class="panel" style="margin-top:16px"><div class="panel-pad head" style="margin:0;padding-bottom:0"><div><h2>Paquetes de servicios</h2><p class="sub" style="font-size:.88rem">Plantillas que se agregan a una cotización con un toque.</p></div>${S.canDelete ? '<button class="btn small" data-act="new-paquete">+ Nuevo paquete</button>' : ''}</div><div data-part="paquetes"></div></section>`;
   },
   bind(root) {
     const f = $('#cfg', root);
@@ -799,7 +834,7 @@ views.ajustes = {
       catch (err) { $('#cfg-err').textContent = dbErr(err); }
     };
   },
-  fill() {},
+  fill(root) { $('[data-part=paquetes]', root).innerHTML = paquetesPanel(); },
 };
 
 let shellOf = null;
@@ -821,16 +856,20 @@ function renderView(force) {
 
 // Global clicks for rows and actions
 $('#view').addEventListener('click', (e) => {
-  const t = e.target.closest('[data-open-quote],[data-open-order],[data-open-client],[data-open-vehicle],[data-open-staff],[data-act]');
+  const g = e.target.closest('[data-goto]'); if (g) return go(g.dataset.goto);
+  const t = e.target.closest('[data-open-quote],[data-open-order],[data-open-client],[data-open-vehicle],[data-open-staff],[data-open-paquete],[data-act]');
   if (!t) return;
   if (t.dataset.openQuote) return showQuote(t.dataset.openQuote);
   if (t.dataset.openOrder) return showOrder(t.dataset.openOrder);
   if (t.dataset.openClient) return showClient(t.dataset.openClient);
   if (t.dataset.openVehicle) return showVehicle(t.dataset.openVehicle);
   if (t.dataset.openStaff) return editStaff(byId(S.personal, t.dataset.openStaff));
+  if (t.dataset.openPaquete) return editPaquete(byId(S.paquetes, t.dataset.openPaquete));
   const a = t.dataset.act;
   if (a === 'new-quote') editQuote(null);
   if (a === 'new-order') editOrder(null);
+  if (a === 'new-cita') editCita(null);
+  if (a === 'new-paquete') editPaquete(null);
   if (a === 'new-client') editClient(null);
   if (a === 'new-vehicle') editVehicle(null);
   if (a === 'new-staff') editStaff(null);
@@ -902,6 +941,7 @@ function editVehicle(v, clienteId, after) {
   const sheet = openSheet(v ? 'Editar vehículo' : 'Nuevo vehículo', `<div class="grid2">
     <div class="span2" id="f-look"></div>
     ${select('f-cliente', 'Propietario', opts, x.clienteId, { req: true, span: true })}
+    <div class="field span2"><span>VIN / número de serie (opcional: llena marca, modelo y año)</span><div class="toolbar"><input id="f-vin" value="${esc(x.vin || '')}" maxlength="17" autocomplete="off" style="flex:1;min-width:0;text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.06em" placeholder="17 caracteres"><button type="button" class="btn" id="f-vin-btn">Buscar VIN</button></div><p class="muted" id="vin-msg" style="margin:0;font-size:.85rem"></p></div>
     ${input('f-placa', 'Placa', x.placa, { req: true, attrs: 'style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.1em"' })}
     <label class="field"><span>Marca *</span><select id="f-marca-sel"></select><input id="f-marca-otra" placeholder="Escribe la marca" hidden></label>
     <label class="field"><span>Modelo *</span><select id="f-modelo-sel"></select><input id="f-modelo-otro" placeholder="Escribe el modelo" hidden></label>
@@ -909,7 +949,6 @@ function editVehicle(v, clienteId, after) {
     <label class="field"><span>Carrocería</span><select id="f-carroceria">${Object.entries(CARROCERIAS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
     <div class="field span2"><span>Color</span><div class="swatches" id="f-swatches">${COLORES.map(([n, h]) => `<button type="button" class="sw" data-color="${esc(n)}" title="${esc(n)}" aria-label="${esc(n)}" style="background:${h}"></button>`).join('')}<button type="button" class="sw other" data-color="${OTRA}">Otro…</button></div><input id="f-color-otro" placeholder="Escribe el color" hidden></div>
     ${input('f-km', 'Kilometraje', x.km, { type: 'number', attrs: 'min="0"' })}
-    ${input('f-vin', 'VIN / número de serie', x.vin, { span: true })}
     ${input('f-notas', 'Notas', x.notas, { area: true, span: true })}</div><p class="err" id="f-err"></p>`,
   `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar vehículo</button>`);
   $('[data-cancel]', sheet).onclick = closeSheet;
@@ -961,11 +1000,28 @@ function editVehicle(v, clienteId, after) {
   sheet.addEventListener('change', (e) => { if (e.target === mSel || e.target === moSel) autoBody(); preview(); });
   sheet.addEventListener('input', (e) => { if (e.target === mOtra || e.target === moOtro) autoBody(); preview(); });
   paintSwatches(); preview();
+  $('#f-vin-btn', sheet).onclick = async (e) => {
+    const vin = val(sheet, 'f-vin').toUpperCase().replace(/\s/g, ''), msg = $('#vin-msg', sheet);
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) { msg.textContent = 'El VIN tiene 17 caracteres: letras y números, sin I, O ni Q.'; return; }
+    e.target.disabled = true; msg.textContent = 'Buscando…';
+    try {
+      const d = await decodeVin(vin);
+      if (!d.marca) { msg.textContent = 'No se encontró información para este VIN. Llena los datos a mano.'; return; }
+      const marca = matchMarca(d.marca);
+      if (marca) { mSel.value = marca; mOtra.value = ''; fillModelos(d.modelo ? matchModelo(marca, d.modelo) : ''); }
+      else { mSel.value = OTRA; mOtra.value = d.marca; fillModelos(d.modelo); }
+      if (d.anio) $('#f-anio', sheet).value = d.anio;
+      if (d.tipo) { bodySel.value = d.tipo; bodyTouched = true; }
+      preview();
+      msg.textContent = `Encontrado: ${[marca || d.marca, d.modelo, d.anio].filter(Boolean).join(' ')}. Revisa que sea correcto.`;
+    } catch { msg.textContent = 'No se pudo consultar el VIN ahora (sin conexión o servicio no disponible). Llena los datos a mano.'; }
+    finally { e.target.disabled = false; }
+  };
   $('[data-save]', sheet).onclick = async (e) => {
     const placa = val(sheet, 'f-placa').toUpperCase().replace(/\s+/g, ' ');
     const d = { clienteId: val(sheet, 'f-cliente'), placa, marca: pick(mSel, mOtra), modelo: pick(moSel, moOtro),
       anio: val(sheet, 'f-anio') ? parseInt(val(sheet, 'f-anio'), 10) : '', color, carroceria: bodySel.value,
-      km: val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '', vin: val(sheet, 'f-vin'), notas: val(sheet, 'f-notas'), creado: x.creado || new Date().toISOString() };
+      km: val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '', vin: val(sheet, 'f-vin').toUpperCase().replace(/\s/g, ''), notas: val(sheet, 'f-notas'), creado: x.creado || new Date().toISOString() };
     if (!d.clienteId || !d.placa || !d.marca || !d.modelo) return void ($('#f-err').textContent = 'Completa propietario, placa, marca y modelo.');
     if (S.vehiculos.some((o) => o.id !== v?.id && (o.placa || '').toUpperCase() === placa)) return void ($('#f-err').textContent = `Ya existe un vehículo con la placa ${placa}.`);
     e.target.disabled = true;
@@ -992,7 +1048,9 @@ function showVehicle(id) {
     const body = `${vehicleLook(v)}<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">${plate(v.placa)}<span class="strong" style="font-size:1.1rem">${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</span></div>
       <dl class="dl"><dt>Propietario</dt><dd>${c ? `<a href="#clientes" data-goto-client="${esc(c.id)}">${esc(c.nombre)}</a>` : '—'}</dd>
       <dt>Color</dt><dd>${esc(v.color || '—')}</dd><dt>Kilometraje</dt><dd class="mono">${v.km !== '' && v.km != null ? Number(v.km).toLocaleString('es') + ' km' : '—'}</dd>
-      <dt>VIN / serie</dt><dd class="mono">${esc(v.vin || '—')}</dd><dt>Notas</dt><dd>${esc(v.notas || '—')}</dd></dl>
+      <dt>VIN / serie</dt><dd class="mono">${esc(v.vin || '—')}</dd><dt>Notas</dt><dd>${esc(v.notas || '—')}</dd>
+      <dt>Próximo mantenimiento</dt><dd>${v.proximoServicio?.fecha ? `${fdate(v.proximoServicio.fecha)}${v.proximoServicio.km ? ` · ${Number(v.proximoServicio.km).toLocaleString('es')} km` : ''}${v.proximoServicio.nota ? ` · ${esc(v.proximoServicio.nota)}` : ''}${v.proximoServicio.avisado ? ' <span class="pill st-aprobada">Avisado</span>' : ''}` : '—'}
+        ${S.canWrite ? ` <button class="btn small" data-next>${v.proximoServicio?.fecha ? 'Cambiar' : 'Programar'}</button>` : ''}</dd></dl>
       <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de servicios</h2></div>${serviceHistory(os)}</section>
       <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Historial de cotizaciones</h2></div>${quoteTable(qs, 'Sin cotizaciones para este vehículo')}</section>`;
     const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar</button><button class="btn" data-quote>+ Cotización</button><button class="btn primary" data-order>+ Orden</button>` : '';
@@ -1004,6 +1062,7 @@ function showVehicle(id) {
     $('[data-edit]', s).onclick = () => editVehicle(v, null, () => showVehicle(id));
     $('[data-quote]', s).onclick = () => editQuote(null, { clienteId: v.clienteId, vehiculoId: id });
     $('[data-order]', s).onclick = () => editOrder(null, { clienteId: v.clienteId, vehiculoId: id });
+    $('[data-next]', s)?.addEventListener('click', () => editNextService(v));
     if ($('[data-del]', s)) $('[data-del]', s).onclick = async () => {
       if (qs.length || os.length) { toast('No se puede eliminar: el vehículo tiene cotizaciones u órdenes.'); return; }
       if (!(await ask(`¿Eliminar el vehículo ${v.placa}?`))) return;
@@ -1102,7 +1161,8 @@ function editQuote(q, preset = {}) {
     </div>
     <section><h3>Detalle del trabajo</h3>
       <div class="table-scroll"><table class="items"><thead><tr><th class="c-kind">Tipo</th><th>Descripción</th><th class="num c-qty">Cant.</th><th class="num c-price">Precio unit.</th><th class="num c-amt">Importe</th><th></th></tr></thead><tbody id="items"></tbody></table></div>
-      <div class="toolbar" style="margin-top:8px"><button class="btn small" data-add="mano_obra">+ Mano de obra</button><button class="btn small" data-add="repuesto">+ Repuesto</button><button class="btn small" data-add="otro">+ Otro</button></div>
+      <div class="toolbar" style="margin-top:8px"><button class="btn small" data-add="mano_obra">+ Mano de obra</button><button class="btn small" data-add="repuesto">+ Repuesto</button><button class="btn small" data-add="otro">+ Otro</button>
+        ${S.paquetes.length ? `<select id="f-paquete" style="width:auto"><option value="">+ Agregar paquete…</option>${S.paquetes.map((p) => `<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('')}</select>` : ''}</div>
     </section>
     <div class="grid2" style="align-items:start">
       ${input('f-notas', 'Observaciones para el cliente', x.notas, { area: true, attrs: 'placeholder="Ej: Garantía de 3 meses en mano de obra. Repuestos sujetos a disponibilidad."' })}
@@ -1140,6 +1200,14 @@ function editQuote(q, preset = {}) {
   $$('[data-add]', sheet).forEach((b) => b.onclick = () => { tbody.insertAdjacentHTML('beforeend', row({ tipo: b.dataset.add, desc: '', cantidad: 1, precio: 0 })); recalc(); $('tr:last-child [data-k=desc]', tbody).focus(); });
   tbody.addEventListener('click', (e) => { if (e.target.closest('[data-rm]')) { e.target.closest('tr').remove(); recalc(); } });
   sheet.addEventListener('input', recalc);
+  $('#f-paquete', sheet)?.addEventListener('change', (e) => {
+    const pq = byId(S.paquetes, e.target.value); e.target.value = '';
+    if (!pq) return;
+    // Replace the empty starter line instead of leaving it above the package.
+    $$('tr', tbody).forEach((tr) => { if (!$('[data-k=desc]', tr).value.trim() && !Number($('[data-k=precio]', tr).value)) tr.remove(); });
+    pq.items.forEach((i) => tbody.insertAdjacentHTML('beforeend', row(i)));
+    recalc(); toast(`Paquete “${pq.nombre}” agregado`);
+  });
   $('[data-cancel]', sheet).onclick = () => (q ? showQuote(q.id) : closeSheet());
   $('[data-save]', sheet).onclick = async (e) => {
     const items = read().filter((i) => i.desc || i.precio);
@@ -1375,7 +1443,7 @@ views.ordenes = {
 
 function editOrder(o, preset = {}) {
   if (!S.clientes.length) { toast('Primero registra un cliente.'); go('clientes'); return; }
-  const x = o || { clienteId: preset.clienteId || '', vehiculoId: preset.vehiculoId || '', tecnico: '', motivo: '', prometida: '' };
+  const x = o || { clienteId: preset.clienteId || '', vehiculoId: preset.vehiculoId || '', tecnico: '', motivo: preset.motivo || '', prometida: '' };
   const cliOpts = [['', 'Selecciona un cliente…'], ...[...S.clientes].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((c) => [c.id, c.nombre])];
   const staffOpts = [['', 'Sin asignar'], ...S.personal.filter((p) => p.activo !== false || p.id === x.tecnico).map((p) => [p.id, `${p.nombre} · ${ROLES[p.rol] || ''}`])];
   const sheet = openSheet(o ? `Editar ${o.numero}` : 'Nueva orden de trabajo', `<div class="grid2">
@@ -1409,6 +1477,7 @@ function editOrder(o, preset = {}) {
         id = await save('ordenes', null, { ...data, numero: nextOtNumber(), estado, creada: now, creadaPor: S.myId || '', cotizacionId: q?.id || '',
           pagos: [], historial: [{ estado, fecha: now, por: S.myId || '' }] });
         if (q) await patch('cotizaciones', q.id, { ordenId: id });
+        if (preset.citaId) await patch('citas', preset.citaId, { estado: 'llego', ordenId: id });
       }
       toast(o ? 'Orden actualizada' : 'Orden creada');
       showOrder(id);
@@ -1498,7 +1567,7 @@ function showOrder(id) {
       </section>
 
       <section class="ot-section"><h2>Historial</h2><ul class="timeline">${[...(o.historial || [])].reverse().map((h) => `<li><span class="strong">${OT_ESTADOS[h.estado] || esc(h.estado)}</span> <span class="muted">· ${fdate(h.fecha)} ${new Date(h.fecha).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}${h.por ? ` · ${esc(quien(h.por))}` : ''}</span></li>`).join('')}</ul></section>`;
-    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar datos</button>${o.estado === 'terminado' ? '<button class="btn primary" id="ot-deliver">Marcar entregado</button>' : ''}` : '';
+    const foot = S.canWrite ? `${S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-edit>Editar datos</button>${o.estado === 'terminado' ? '<button class="btn primary" id="ot-deliver">Marcar entregado</button>' : ''}${o.estado === 'entregado' && v ? '<button class="btn primary" id="ot-next">Próximo mantenimiento</button>' : ''}` : '';
     const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
     const s = existing || openSheet(`Orden ${o.numero}`, body, foot, draw);
     if (existing) { $('.sheet-body', s).innerHTML = body; $('.sheet-foot', s) && ($('.sheet-foot', s).innerHTML = foot); }
@@ -1524,6 +1593,7 @@ function showOrder(id) {
     });
     $('#ot-tecnico', s).onchange = (e) => patch('ordenes', id, { tecnico: e.target.value }).then(() => toast('Mecánico asignado')).catch((err) => toast(dbErr(err)));
     $('#ot-recep', s)?.addEventListener('click', () => editReception(o));
+    $('#ot-next', s)?.addEventListener('click', () => editNextService(v, () => showOrder(id)));
     $('#ot-new-quote', s)?.addEventListener('click', () => editQuote(null, { clienteId: o.clienteId, vehiculoId: o.vehiculoId, ordenId: id }));
     $('#ot-link', s)?.addEventListener('change', async (e) => {
       const qid = e.target.value; if (!qid) return;
@@ -1828,6 +1898,274 @@ views.reportes = {
 };
 function localMonth(iso) { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
 
+// ---------- Global search: clients (with all their vehicles), vehicles, orders and quotes ----------
+const squash = (s) => norm(s).replace(/[\s.\-]/g, '');
+function searchAll(text) {
+  const t = norm(text), tq = squash(text), digitsQ = digits(text);
+  if (!t) return null;
+  const hit = (...vals) => vals.some((v) => norm(v).includes(t) || (tq.length > 1 && squash(v).includes(tq)));
+  return {
+    clientes: S.clientes.filter((c) => hit(c.nombre, c.documento, c.correo) || (digitsQ.length >= 3 && digits(c.telefono).includes(digitsQ))).slice(0, 8),
+    vehiculos: S.vehiculos.filter((v) => hit(v.placa, v.vin, `${v.marca} ${v.modelo}`, v.color)).slice(0, 8),
+    ordenes: S.ordenes.filter((o) => hit(o.numero)).slice(0, 5),
+    cotizaciones: S.cotizaciones.filter((q) => hit(q.numero)).slice(0, 5),
+  };
+}
+function openSearch() {
+  if ($('.gsearch')) return;
+  const el = document.createElement('div');
+  el.className = 'gsearch';
+  el.innerHTML = `<div class="gsearch-box" role="dialog" aria-modal="true" aria-label="Buscar">
+    <div class="gsearch-head"><input id="gs-input" type="search" placeholder="Buscar cliente, teléfono, placa, VIN, orden o cotización" autocomplete="off"><button class="btn ghost small" data-close aria-label="Cerrar">✕</button></div>
+    <div class="gsearch-res" id="gs-res"><p class="muted" style="margin:0">Escribe al menos una letra. Ej: “Hernández”, “7000 0001”, “P123”, “Hilux”.</p></div></div>`;
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  const inp = $('#gs-input', el), res = $('#gs-res', el);
+  const row = (attrs, main, sub, extra = '') => `<div class="gs-row"><button class="gs-main" ${attrs}>${main}<span class="muted">${sub}</span></button>${extra}</div>`;
+  const draw = () => {
+    const r = searchAll(inp.value);
+    if (!r) return;
+    const parts = [];
+    if (r.clientes.length) parts.push(`<h3>Clientes</h3>${r.clientes.map((c) => {
+      const vs = S.vehiculos.filter((v) => v.clienteId === c.id);
+      return row(`data-gs-client="${esc(c.id)}"`, `<strong>${esc(c.nombre)}</strong>`, esc([c.telefono, c.documento].filter(Boolean).join(' · ') || 'Sin teléfono'),
+        `<div class="gs-chips">${vs.length ? vs.map((v) => `<button class="gs-chip" data-gs-vehicle="${esc(v.id)}">${brandLogo(v.marca)}${plate(v.placa)}<span>${esc(v.marca)} ${esc(v.modelo)}</span></button>`).join('') : '<span class="muted" style="font-size:.85rem">Sin vehículos registrados</span>'}</div>`);
+    }).join('')}`);
+    if (r.vehiculos.length) parts.push(`<h3>Vehículos</h3>${r.vehiculos.map((v) => row(`data-gs-vehicle="${esc(v.id)}"`, `<span class="veh-cell">${brandLogo(v.marca)}${plate(v.placa)}<strong>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</strong></span>`, esc(cliente(v.clienteId)?.nombre || ''))).join('')}`);
+    if (r.ordenes.length) parts.push(`<h3>Órdenes</h3>${r.ordenes.map((o) => row(`data-gs-order="${esc(o.id)}"`, `<span class="mono strong">${esc(o.numero)}</span> ${otPill(o)}`, esc(`${cliente(o.clienteId)?.nombre || ''} · ${vehiculo(o.vehiculoId)?.placa || ''}`))).join('')}`);
+    if (r.cotizaciones.length) parts.push(`<h3>Cotizaciones</h3>${r.cotizaciones.map((q) => row(`data-gs-quote="${esc(q.id)}"`, `<span class="mono strong">${esc(q.numero)}</span> ${pill(q)}`, esc(cliente(q.clienteId)?.nombre || ''))).join('')}`);
+    res.innerHTML = parts.join('') || `<p class="muted" style="margin:0">Nada coincide con “${esc(inp.value)}”.</p>`;
+  };
+  inp.oninput = draw;
+  inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = $('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote]', res); if (first) first.click(); } };
+  el.addEventListener('click', (e) => {
+    if (e.target === el || e.target.closest('[data-close]')) return close();
+    const b = e.target.closest('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote]');
+    if (!b) return;
+    close();
+    if (b.dataset.gsVehicle) showVehicle(b.dataset.gsVehicle);
+    else if (b.dataset.gsClient) showClient(b.dataset.gsClient);
+    else if (b.dataset.gsOrder) showOrder(b.dataset.gsOrder);
+    else showQuote(b.dataset.gsQuote);
+  });
+  el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+  inp.focus();
+}
+$('#search-btn').onclick = openSearch;
+document.addEventListener('keydown', (e) => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+  if (!S.me || !$('#auth').hidden) return;
+  if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); openSearch(); }
+});
+
+// ---------- Appointments and maintenance reminders ----------
+const CITA_ESTADOS = { programada: 'Programada', confirmada: 'Confirmada', llego: 'Llegó', no_llego: 'No llegó', cancelada: 'Cancelada' };
+const CITA_PILL = { programada: 'borrador', confirmada: 'enviada', llego: 'aprobada', no_llego: 'vencida', cancelada: 'rechazada' };
+const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const shiftDate = (ymd, days) => { const d = new Date(ymd + 'T12:00:00'); d.setDate(d.getDate() + days); return localDate(d); };
+const longDate = (ymd) => new Date(ymd + 'T12:00:00').toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+const hora12 = (hm) => { if (!hm) return ''; const [h, m] = hm.split(':').map(Number); return new Date(2000, 0, 1, h, m).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }); };
+const citaPill = (c) => `<span class="pill st-${CITA_PILL[c.estado] || 'borrador'}">${CITA_ESTADOS[c.estado] || esc(c.estado)}</span>`;
+const vehLabel = (v) => (v ? `tu ${v.marca} ${v.modelo} placa ${v.placa}` : 'tu vehículo');
+
+function citaMessage(c) {
+  const cl = cliente(c.clienteId), v = vehiculo(c.vehiculoId), cfg = S.config;
+  return [`Hola ${cl?.nombre || ''}, te saluda ${cfg.nombre}.`,
+    `Te recordamos tu cita el ${longDate(c.fecha)} a las ${hora12(c.hora)} para ${vehLabel(v)}.${c.motivo ? ` Motivo: ${c.motivo}.` : ''}`,
+    'Por favor responde para confirmar o si necesitas cambiar la hora.', [cfg.telefono, cfg.direccion].filter(Boolean).join(' · ')].filter(Boolean).join('\n\n');
+}
+function serviceMessage(v) {
+  const cl = cliente(v.clienteId), p = v.proximoServicio || {}, cfg = S.config;
+  const cuando = [p.fecha ? `para el ${fdate(p.fecha)}` : '', p.km ? `a los ${Number(p.km).toLocaleString('es')} km` : ''].filter(Boolean).join(' o ');
+  return [`Hola ${cl?.nombre || ''}, te saluda ${cfg.nombre}.`,
+    `Te recordamos que ${vehLabel(v)} tiene pendiente su mantenimiento${p.nota ? ` (${p.nota})` : ''}${cuando ? `, previsto ${cuando}` : ''}.`,
+    '¿Te agendamos una cita? Responde con el día y la hora que te queden mejor.', [cfg.telefono, cfg.direccion].filter(Boolean).join(' · ')].filter(Boolean).join('\n\n');
+}
+// Vehicles whose next service falls within 30 days (or is overdue) and the client hasn't been told yet.
+function maintenanceDue() {
+  const limite = shiftDate(localDate(), 30);
+  return S.vehiculos.filter((v) => v.proximoServicio?.fecha && !v.proximoServicio.avisado && v.proximoServicio.fecha <= limite)
+    .sort((a, b) => a.proximoServicio.fecha.localeCompare(b.proximoServicio.fecha));
+}
+
+function citaRow(c) {
+  const cl = cliente(c.clienteId), v = vehiculo(c.vehiculoId);
+  return `<div class="cita ${c.estado === 'cancelada' ? 'off' : ''}"><button class="cita-main" data-open-cita="${esc(c.id)}">
+      <span class="cita-hora mono">${esc(hora12(c.hora))}</span>
+      <span class="cita-info"><strong>${esc(cl?.nombre || 'Cliente eliminado')}</strong><span class="muted">${v ? `${esc(v.placa)} · ${esc(v.marca)} ${esc(v.modelo)}` : 'Sin vehículo'}${c.motivo ? ` · ${esc(c.motivo)}` : ''}</span></span>
+      ${citaPill(c)}</button>
+    ${S.canWrite && ['programada', 'confirmada'].includes(c.estado) ? `<a class="btn small ok" target="_blank" rel="noopener" data-cita-wa="${esc(c.id)}" href="https://wa.me/${digits(cl?.telefono)}?text=${encodeURIComponent(citaMessage(c))}">${c.recordatorio ? 'Recordar otra vez' : 'Recordar'}</a>` : ''}</div>`;
+}
+
+views.agenda = {
+  shell: () => `${banner()}<div class="head"><div><h1>Agenda</h1><p class="sub">Citas de la semana y mantenimientos que toca avisar.</p></div>
+    <div class="toolbar"><button class="btn" id="ag-prev" aria-label="Semana anterior">◀</button><button class="btn" id="ag-hoy">Hoy</button><button class="btn" id="ag-next" aria-label="Semana siguiente">▶</button>
+    ${S.canWrite ? '<button class="btn primary" data-act="new-cita">+ Nueva cita</button>' : ''}</div></div>
+    <div class="two-col"><section class="panel panel-pad" data-part="semana"></section><section class="panel panel-pad" data-part="mant"></section></div>`,
+  bind(root) {
+    const move = (d) => { S.q.agDesde = d === 0 ? localDate() : shiftDate(S.q.agDesde || localDate(), d); this.fill(root); };
+    $('#ag-prev', root).onclick = () => move(-7);
+    $('#ag-next', root).onclick = () => move(7);
+    $('#ag-hoy', root).onclick = () => move(0);
+  },
+  fill(root) {
+    const desde = S.q.agDesde || localDate(), hoy = localDate();
+    const dias = [...Array(7)].map((_, i) => shiftDate(desde, i));
+    $('[data-part=semana]', root).innerHTML = `<h2 style="margin-bottom:10px">Del ${fdate(dias[0])} al ${fdate(dias[6])}</h2>${dias.map((d) => {
+      const cs = S.citas.filter((c) => c.fecha === d).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+      return `<div class="ag-day ${d === hoy ? 'today' : ''}"><h3>${esc(longDate(d))}${d === hoy ? ' · hoy' : ''}</h3>${cs.length ? cs.map(citaRow).join('') : '<p class="muted ag-empty">Sin citas</p>'}</div>`;
+    }).join('')}`;
+    const due = maintenanceDue();
+    $('[data-part=mant]', root).innerHTML = `<h2 style="margin-bottom:10px">Mantenimientos por avisar</h2>${due.length ? due.map((v) => {
+      const p = v.proximoServicio, vencido = p.fecha < hoy;
+      return `<div class="mant"><button class="cita-main" data-open-vehicle="${esc(v.id)}"><span class="veh-cell">${brandLogo(v.marca)}${plate(v.placa)}</span>
+        <span class="cita-info"><strong>${esc(cliente(v.clienteId)?.nombre || '')}</strong><span class="muted">${esc(p.nota || 'Mantenimiento')} · ${fdate(p.fecha)}${p.km ? ` · ${Number(p.km).toLocaleString('es')} km` : ''}</span></span>
+        ${vencido ? '<span class="pill st-vencida">Vencido</span>' : ''}</button>
+        ${S.canWrite ? `<div class="toolbar"><a class="btn small ok" target="_blank" rel="noopener" data-mant-wa="${esc(v.id)}" href="https://wa.me/${digits(cliente(v.clienteId)?.telefono)}?text=${encodeURIComponent(serviceMessage(v))}">Avisar por WhatsApp</a><button class="btn small" data-mant-cita="${esc(v.id)}">Agendar cita</button></div>` : ''}</div>`;
+    }).join('') : '<p class="muted" style="margin:0">Ningún vehículo tiene mantenimiento en los próximos 30 días. Prográmalos desde la ficha del vehículo o al entregar una orden.</p>'}`;
+  },
+};
+
+// WhatsApp reminder links mark the appointment / maintenance as notified.
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-cita-wa],[data-mant-wa],[data-mant-cita],[data-open-cita]');
+  if (!a) return;
+  if (a.dataset.openCita) return editCita(byId(S.citas, a.dataset.openCita));
+  if (a.dataset.citaWa) { patch('citas', a.dataset.citaWa, { recordatorio: new Date().toISOString() }).catch(() => {}); toast('Abriendo WhatsApp…'); }
+  if (a.dataset.mantWa) {
+    const v = vehiculo(a.dataset.mantWa);
+    if (v) patch('vehiculos', v.id, { proximoServicio: { ...v.proximoServicio, avisado: true, avisadoFecha: new Date().toISOString() } }).catch(() => {});
+    toast('Abriendo WhatsApp…');
+  }
+  if (a.dataset.mantCita) { const v = vehiculo(a.dataset.mantCita); editCita(null, { clienteId: v.clienteId, vehiculoId: v.id, motivo: v.proximoServicio?.nota || 'Mantenimiento' }); }
+});
+
+function editCita(c, preset = {}) {
+  if (!S.clientes.length) { toast('Primero registra un cliente.'); go('clientes'); return; }
+  const x = c || { clienteId: preset.clienteId || '', vehiculoId: preset.vehiculoId || '', fecha: localDate(), hora: '08:00', motivo: preset.motivo || '', tecnico: '', estado: 'programada' };
+  const cliOpts = [['', 'Selecciona un cliente…'], ...[...S.clientes].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((cl) => [cl.id, cl.nombre])];
+  const staffOpts = [['', 'Sin asignar'], ...S.personal.filter((p) => p.activo !== false || p.id === x.tecnico).map((p) => [p.id, p.nombre])];
+  const sheet = openSheet(c ? 'Cita' : 'Nueva cita', `
+    ${c ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${citaPill(c)}${c.recordatorio ? `<span class="muted" style="font-size:.88rem">Recordatorio enviado ${fdate(c.recordatorio)}</span>` : ''}${c.ordenId ? `<button class="btn small" data-open-order="${esc(c.ordenId)}">Ver orden</button>` : ''}</div>` : ''}
+    <div class="grid2">
+      ${select('f-cliente', 'Cliente', cliOpts, x.clienteId, { req: true })}
+      <label class="field"><span>Vehículo</span><select id="f-vehiculo"></select></label>
+      ${input('f-fecha', 'Fecha', x.fecha, { type: 'date', req: true })}
+      ${input('f-hora', 'Hora', x.hora, { type: 'time', req: true })}
+      ${select('f-tecnico', 'Mecánico', staffOpts, x.tecnico)}
+      ${c ? select('f-estado', 'Estado', Object.entries(CITA_ESTADOS), x.estado) : ''}
+      ${input('f-motivo', 'Motivo', x.motivo, { area: true, span: true, attrs: 'placeholder="Ej: Mantenimiento de 20,000 km"' })}
+    </div>
+    ${c && S.canWrite && !c.ordenId && ['programada', 'confirmada'].includes(c.estado) ? '<div class="notice info" style="margin:0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>¿Ya llegó el cliente?</span><button class="btn small primary" id="ci-llego">Llegó: crear orden de trabajo</button></div>' : ''}
+    <p class="err" id="f-err"></p>`,
+  `${c && S.canDelete ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-cancel>Cancelar</button>${S.canWrite ? `<button class="btn primary" data-save>${c ? 'Guardar cita' : 'Agendar'}</button>` : ''}`);
+  const cliSel = $('#f-cliente', sheet), vehSel = $('#f-vehiculo', sheet);
+  const fillVeh = (sel) => {
+    const vs = S.vehiculos.filter((v) => v.clienteId === cliSel.value);
+    vehSel.innerHTML = `<option value="">${cliSel.value ? (vs.length ? 'Sin especificar' : 'Este cliente no tiene vehículos') : '—'}</option>`
+      + vs.map((v) => `<option value="${esc(v.id)}" ${v.id === sel ? 'selected' : ''}>${esc(v.placa)} · ${esc(v.marca)} ${esc(v.modelo)}</option>`).join('');
+  };
+  cliSel.onchange = () => fillVeh('');
+  fillVeh(x.vehiculoId);
+  $('[data-cancel]', sheet).onclick = closeSheet;
+  $('#ci-llego', sheet)?.addEventListener('click', () => editOrder(null, { clienteId: c.clienteId, vehiculoId: c.vehiculoId, motivo: c.motivo, citaId: c.id }));
+  $('[data-save]', sheet)?.addEventListener('click', async (e) => {
+    const d = { clienteId: cliSel.value, vehiculoId: vehSel.value, fecha: val(sheet, 'f-fecha'), hora: val(sheet, 'f-hora'), tecnico: val(sheet, 'f-tecnico'), motivo: val(sheet, 'f-motivo') };
+    if (!d.clienteId || !d.fecha || !d.hora) return void ($('#f-err').textContent = 'Completa cliente, fecha y hora.');
+    const choque = S.citas.find((o) => o.id !== c?.id && o.fecha === d.fecha && o.hora === d.hora && o.estado !== 'cancelada' && (!d.tecnico || o.tecnico === d.tecnico));
+    if (choque && !(await ask(`Ya hay una cita a esa hora (${cliente(choque.clienteId)?.nombre || ''}). ¿Agendar de todos modos?`, 'Agendar igual'))) return;
+    e.target.disabled = true;
+    try {
+      if (c) await patch('citas', c.id, { ...d, estado: val(sheet, 'f-estado') });
+      else await save('citas', null, { ...d, estado: 'programada', creada: new Date().toISOString(), creadaPor: S.myId || '' });
+      closeSheet(); toast(c ? 'Cita guardada' : `Cita agendada: ${longDate(d.fecha)}, ${hora12(d.hora)}`);
+      if (S.view === 'agenda') { S.q.agDesde = S.q.agDesde && d.fecha >= S.q.agDesde && d.fecha <= shiftDate(S.q.agDesde, 6) ? S.q.agDesde : d.fecha; renderView(false); }
+    } catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
+  });
+  if ($('[data-del]', sheet)) $('[data-del]', sheet).onclick = async () => {
+    if (!(await ask('¿Eliminar esta cita?'))) return;
+    try { await remove('citas', c.id); closeSheet(); toast('Cita eliminada'); } catch (err) { toast(dbErr(err)); }
+  };
+}
+
+function editNextService(v, after) {
+  const p = v.proximoServicio || {};
+  const sheet = openSheet(`Próximo mantenimiento · ${v.placa}`, `<div class="grid2">
+      ${input('f-fecha', 'Fecha', p.fecha || shiftDate(localDate(), 180), { type: 'date' })}
+      ${input('f-km', 'O al llegar a (km)', p.km ?? (v.km !== '' && v.km != null ? Number(v.km) + 5000 : ''), { type: 'number', attrs: 'min="0" inputmode="numeric"' })}
+      ${input('f-nota', 'Qué toca hacer', p.nota || '', { span: true, attrs: 'placeholder="Ej: Cambio de aceite y filtros"' })}
+    </div><p class="muted" style="margin:0;font-size:.88rem">Aparecerá en Agenda → Mantenimientos por avisar 30 días antes de la fecha.</p><p class="err" id="f-err"></p>`,
+  `${p.fecha ? '<button class="btn danger" data-clear>Quitar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar</button>`);
+  const done = () => (after ? after() : showVehicle(v.id));
+  $('[data-cancel]', sheet).onclick = done;
+  $('[data-clear]', sheet)?.addEventListener('click', () => patch('vehiculos', v.id, { proximoServicio: null }).then(done).catch((err) => toast(dbErr(err))));
+  $('[data-save]', sheet).onclick = async (e) => {
+    const fecha = val(sheet, 'f-fecha'), km = val(sheet, 'f-km') ? parseInt(val(sheet, 'f-km'), 10) : '';
+    if (!fecha) return void ($('#f-err').textContent = 'Elige la fecha del próximo mantenimiento.');
+    e.target.disabled = true;
+    try { await patch('vehiculos', v.id, { proximoServicio: { fecha, km, nota: val(sheet, 'f-nota'), avisado: false } }); toast('Próximo mantenimiento programado'); done(); }
+    catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+// ---------- Service packages (templates of quote lines) ----------
+function editPaquete(pq) {
+  const x = pq || { nombre: '', items: [{ tipo: 'mano_obra', desc: '', cantidad: 1, precio: 0 }] };
+  const row = (i) => `<tr><td class="c-kind"><select data-k="tipo">${Object.entries(TIPOS).map(([k, l]) => `<option value="${k}" ${k === i.tipo ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
+    <td style="min-width:160px"><input data-k="desc" value="${esc(i.desc)}" placeholder="Ej: Cambio de aceite"></td>
+    <td class="c-qty"><input data-k="cantidad" class="num" type="number" min="0" step="0.01" value="${esc(i.cantidad)}"></td>
+    <td class="c-price"><input data-k="precio" class="num" type="number" min="0" step="0.01" value="${esc(i.precio)}"></td>
+    <td><button class="btn ghost small" data-rm aria-label="Quitar línea">✕</button></td></tr>`;
+  const sheet = openSheet(pq ? 'Editar paquete' : 'Nuevo paquete de servicios', `
+    ${input('f-nombre', 'Nombre del paquete', x.nombre, { req: true, attrs: 'placeholder="Ej: Mantenimiento 20,000 km"' })}
+    <section><h3>Líneas del paquete</h3><div class="table-scroll"><table class="items"><thead><tr><th class="c-kind">Tipo</th><th>Descripción</th><th class="num c-qty">Cant.</th><th class="num c-price">Precio unit.</th><th></th></tr></thead><tbody id="items">${x.items.map(row).join('')}</tbody></table></div>
+      <div class="toolbar" style="margin-top:8px"><button class="btn small" data-add="mano_obra">+ Mano de obra</button><button class="btn small" data-add="repuesto">+ Repuesto</button><button class="btn small" data-add="otro">+ Otro</button></div></section>
+    <p class="muted" style="margin:0;font-size:.88rem">Puedes dejar precios en 0 si cambian según el vehículo; se ajustan en cada cotización.</p><p class="err" id="f-err"></p>`,
+  `${pq ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar paquete</button>`);
+  const tbody = $('#items', sheet);
+  $$('[data-add]', sheet).forEach((b) => b.onclick = () => { tbody.insertAdjacentHTML('beforeend', row({ tipo: b.dataset.add, desc: '', cantidad: 1, precio: 0 })); $('tr:last-child [data-k=desc]', tbody).focus(); });
+  tbody.addEventListener('click', (e) => { if (e.target.closest('[data-rm]')) e.target.closest('tr').remove(); });
+  $('[data-cancel]', sheet).onclick = () => { closeSheet(); go('ajustes'); };
+  $('[data-save]', sheet).onclick = async (e) => {
+    const nombre = val(sheet, 'f-nombre');
+    const items = $$('tr', tbody).map((tr) => ({ tipo: $('[data-k=tipo]', tr).value, desc: $('[data-k=desc]', tr).value.trim(), cantidad: Number($('[data-k=cantidad]', tr).value) || 0, precio: r2(Number($('[data-k=precio]', tr).value) || 0) })).filter((i) => i.desc);
+    if (!nombre) return void ($('#f-err').textContent = 'Escribe el nombre del paquete.');
+    if (!items.length) return void ($('#f-err').textContent = 'Agrega al menos una línea con descripción.');
+    e.target.disabled = true;
+    try { await save('paquetes', pq?.id, { nombre, items }); closeSheet(); toast('Paquete guardado'); }
+    catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+  if (pq) $('[data-del]', sheet).onclick = async () => {
+    if (!(await ask(`¿Eliminar el paquete “${pq.nombre}”? Las cotizaciones ya hechas no cambian.`))) return;
+    try { await remove('paquetes', pq.id); closeSheet(); toast('Paquete eliminado'); } catch (err) { toast(dbErr(err)); }
+  };
+}
+function paquetesPanel() {
+  const list = [...S.paquetes].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  return list.length ? `<div class="table-scroll"><table><thead><tr><th>Paquete</th><th>Líneas</th><th class="num">Total sin impuesto</th></tr></thead><tbody>
+    ${list.map((p) => `<tr class="${S.canDelete ? 'row' : ''}" ${S.canDelete ? `data-open-paquete="${esc(p.id)}"` : ''}><td class="strong">${esc(p.nombre)}</td><td class="muted">${esc(p.items.map((i) => i.desc).join(', '))}</td><td class="num">${money(p.items.reduce((s, i) => s + i.cantidad * i.precio, 0))}</td></tr>`).join('')}</tbody></table></div>`
+    : `<div class="empty"><strong>Todavía no hay paquetes</strong><span>Crea plantillas como “Mantenimiento 20,000 km” o “Cambio de frenos” para agregarlas a una cotización con un toque.</span></div>`;
+}
+
+// ---------- VIN lookup (NHTSA vPIC, free; best for vehicles built for the US market) ----------
+async function decodeVin(vin) {
+  const r = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${encodeURIComponent(vin)}?format=json`);
+  if (!r.ok) throw new Error('vin');
+  const d = (await r.json()).Results?.[0] || {};
+  const body = String(d.BodyClass || '');
+  const tipo = /pickup/i.test(body) ? 'pickup' : /sport utility|suv|crossover|multi.?purpose/i.test(body) ? 'suv' : /hatchback/i.test(body) ? 'hatchback'
+    : /minivan|\bvan\b/i.test(body) ? 'van' : /truck|bus|incomplete/i.test(body) ? 'camion' : /sedan|saloon|coupe|convertible|wagon/i.test(body) ? 'sedan' : '';
+  return { marca: String(d.Make || '').trim(), modelo: String(d.Model || '').trim(), anio: String(d.ModelYear || '').trim(), tipo };
+}
+function matchMarca(m) {
+  const n = norm(m);
+  return MARCAS.find((x) => norm(x) === n) || (n === 'ssangyong' ? 'KGM (SsangYong)' : '') || MARCAS.find((x) => norm(x).startsWith(n + ' ')) || '';
+}
+function matchModelo(marca, m) {
+  const n = squash(m), list = modelosDe(marca);
+  return list.find((x) => squash(x) === n) || list.find((x) => squash(x) === squash(marca) + n) || list.find((x) => squash(x).startsWith(n)) || m;
+}
+
 // ---------- Data ----------
 function onData() {
   applyResponses();
@@ -1844,7 +2182,7 @@ function subscribe(col, key, sort) {
   unsubs.push(S.db.collection(col).limit(1000).onSnapshot((snap) => {
     S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(sort);
     S.loaded.add(key);
-    S.ready = S.loaded.size >= 5;
+    S.ready = S.loaded.size >= 7;
     onData();
   }, (err) => toast(dbErr(err))));
 }
@@ -1991,6 +2329,8 @@ async function enter(u) {
   subscribe('cotizaciones', 'cotizaciones', (a, b) => (b.creada || '').localeCompare(a.creada || ''));
   subscribe('personal', 'personal', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
   subscribe('ordenes', 'ordenes', (a, b) => (b.creada || '').localeCompare(a.creada || ''));
+  subscribe('citas', 'citas', (a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
+  subscribe('paquetes', 'paquetes', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
   unsubs.push(S.db.collection('publicas').where('estado', 'in', ['aprobada', 'rechazada']).onSnapshot((snap) => {
     S.respuestas = new Map(snap.docs.map((d) => [d.id, d.data()]));
     applyResponses();
@@ -2016,7 +2356,7 @@ async function start() {
   if (publico !== null) { showPublic(/^[A-Za-z0-9_-]{16,64}$/.test(publico) ? publico : ''); return; }
   firebase.auth().onAuthStateChanged(async (u) => {
     unsubs.forEach((f) => f()); unsubs = [];
-    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], me: null, myId: null, ready: false });
+    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [], me: null, myId: null, ready: false });
     S.respuestas = new Map();
     S.loaded = new Set();
     if (u) { if (!settingUp) await enter(u); return; }

@@ -31,7 +31,15 @@ solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga
    en `index.html?c=<token>` (sin cuenta) y la aprueba o rechaza; la cotización y la orden se actualizan solas.
 4. **Reparación y cobros**: estados de la orden, mecánico asignado, anticipos y pagos (efectivo, tarjeta,
    transferencia), saldo pendiente y mensaje de WhatsApp para avisar que el vehículo está listo.
-5. **Reportes**: cobrado en el mes, por cobrar, órdenes ingresadas y entregadas, por método de pago y por mecánico.
+5. **Agenda**: citas por semana con recordatorio por WhatsApp; al llegar el cliente, la cita se convierte en
+   orden. Los vehículos con *próximo mantenimiento* (desde su ficha o al entregar una orden) aparecen 30 días
+   antes en "Mantenimientos por avisar".
+6. **Reportes**: cobrado en el mes, por cobrar, órdenes ingresadas y entregadas, por método de pago y por mecánico.
+
+Otras ayudas: **búsqueda general** (botón de lupa o tecla `/`: clientes con todos sus vehículos, placas, VIN,
+órdenes y cotizaciones), **paquetes de servicios** en Ajustes para agregar a una cotización con un toque, y
+**búsqueda por VIN** en el formulario del vehículo (servicio gratuito vPIC de NHTSA; funciona mejor con
+vehículos fabricados para el mercado de EE. UU.).
 
 Las fotos y la firma de cada recepción se guardan en `ordenes/<id>/imagenes`. La copia de cada cotización
 que ve el cliente se guarda en `publicas/<token>`; las reglas solo le permiten leerla y responderla una vez.

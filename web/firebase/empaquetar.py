@@ -24,7 +24,7 @@ def headers(html, extra_connect=''):
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src https://fonts.gstatic.com",
         "img-src 'self' data: blob: https://upload.wikimedia.org",
-        "connect-src 'self' https://*.googleapis.com https://es.wikipedia.org https://en.wikipedia.org https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com" + extra_connect,
+        "connect-src 'self' https://*.googleapis.com https://es.wikipedia.org https://en.wikipedia.org https://vpic.nhtsa.dot.gov https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com" + extra_connect,
         "frame-src https://%s https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/" % AUTH_DOMAIN,
         "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
     ])
