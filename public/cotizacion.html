@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cotización</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .public { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+    .decision { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+    .decision button { padding: 12px 24px; font-size: 1rem; }
+    .notice { text-align: center; padding: 14px; border-radius: 8px; margin-top: 16px; }
+    .notice.aprobada { background: #e3f6ee; color: var(--success); }
+    .notice.rechazada { background: #fdecea; color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="public" id="root"><p class="empty">Cargando cotización…</p></div>
+  <script>
+    'use strict';
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const KIND = { repuesto: 'Repuesto', mano_obra: 'Mano de obra', otro: 'Otro' };
+    const token = location.pathname.split('/').pop();
+    const root = document.getElementById('root');
+    const fmtDate = (s) => (s ? new Date(s.length === 10 ? `${s}T00:00:00` : `${s.replace(' ', 'T')}Z`).toLocaleDateString('es') : '—');
+
+    async function load() {
+      const res = await fetch(`/api/public/quotes/${encodeURIComponent(token)}`);
+      const q = await res.json();
+      if (!res.ok) {
+        root.innerHTML = `<div class="card empty">${esc(q.error || 'No se pudo cargar la cotización')}</div>`;
+        return;
+      }
+      const w = q.workshop;
+      document.title = `Cotización ${q.number} - ${w.name}`;
+      const money = (n) => `${esc(w.currency)} ${Number(n).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const expired = q.valid_until && q.valid_until < new Date().toISOString().slice(0, 10);
+      let footer = '';
+      if (q.status === 'aprobada') footer = '<div class="notice aprobada">✔ Aprobaste esta cotización. El taller se pondrá en contacto contigo.</div>';
+      else if (q.status === 'rechazada') footer = '<div class="notice rechazada">Rechazaste esta cotización.</div>';
+      else if (q.status === 'enviada' && expired) footer = '<div class="notice rechazada">Esta cotización está vencida. Contacta al taller para actualizarla.</div>';
+      else if (q.status === 'enviada') footer = `<div class="decision no-print">
+          <button class="btn-success" data-decision="aprobada">Aprobar cotización</button>
+          <button class="btn-danger" data-decision="rechazada">Rechazar</button></div>`;
+
+      root.innerHTML = `<div class="card">
+        <div class="page-head" style="align-items:flex-start">
+          <div><h1>${esc(w.name)}</h1>
+            <div class="muted">${esc(w.address)}</div><div class="muted">${esc(w.phone)} ${esc(w.email)}</div></div>
+          <div style="text-align:right"><strong>Cotización ${esc(q.number)}</strong>
+            <div class="muted">Fecha: ${fmtDate(q.created_at)}</div>
+            <div class="muted">Válida hasta: ${fmtDate(q.valid_until)}</div></div>
+        </div>
+        <dl class="dl" style="margin-bottom:16px">
+          <dt>Cliente</dt><dd>${esc(q.client.name)}</dd>
+          ${q.vehicle ? `<dt>Vehículo</dt><dd>${esc(q.vehicle.make)} ${esc(q.vehicle.model)} ${esc(q.vehicle.year || '')} — ${esc(q.vehicle.plate)}</dd>` : ''}
+        </dl>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">Precio unit.</th><th class="num">Importe</th></tr></thead>
+          <tbody>${q.items.map((i) => `<tr><td>${esc(i.description)}<div class="muted" style="font-size:.8rem">${KIND[i.kind] || ''}</div></td>
+            <td class="num">${i.quantity}</td><td class="num">${money(i.unit_price)}</td><td class="num">${money(i.quantity * i.unit_price)}</td></tr>`).join('')}</tbody>
+        </table></div>
+        <div class="totals" style="margin-top:16px">
+          <div><span>Subtotal</span><span>${money(q.subtotal)}</span></div>
+          ${q.discount ? `<div><span>Descuento</span><span>-${money(q.discount)}</span></div>` : ''}
+          ${q.tax_rate ? `<div><span>Impuesto (${q.tax_rate}%)</span><span>${money(q.tax)}</span></div>` : ''}
+          <div class="grand"><span>Total</span><span>${money(q.total)}</span></div>
+        </div>
+        ${q.notes ? `<p><strong>Observaciones:</strong><br>${esc(q.notes).replace(/\n/g, '<br>')}</p>` : ''}
+        <p class="muted">${esc(w.footer)}</p>
+        ${footer}
+        <p class="error" id="error" style="text-align:center"></p>
+        <div class="no-print" style="text-align:center;margin-top:12px"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
+      </div>`;
+
+      root.querySelectorAll('[data-decision]').forEach((btn) => {
+        btn.onclick = async () => {
+          const decision = btn.dataset.decision;
+          if (!confirm(decision === 'aprobada' ? '¿Confirmas que apruebas esta cotización?' : '¿Confirmas que rechazas esta cotización?')) return;
+          const r = await fetch(`/api/public/quotes/${encodeURIComponent(token)}/respond`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision }),
+          });
+          const data = await r.json();
+          if (!r.ok) document.getElementById('error').textContent = data.error;
+          else load();
+        };
+      });
+    }
+    load();
+  </script>
+</body>
+</html>
