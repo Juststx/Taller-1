@@ -36,6 +36,11 @@ solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga
    antes en "Mantenimientos por avisar".
 6. **Reportes**: cobrado en el mes, por cobrar, órdenes ingresadas y entregadas, por método de pago y por mecánico.
 
+Documentos y respaldo: **PDF** de la cotización, del recibo de cada pago (también como mensaje de WhatsApp) y de la
+hoja de recepción y entrega (con fotos de antes y después y las firmas); en el celular se comparten directo a
+WhatsApp. **Respaldo** en Excel (una hoja por tipo de dato) y en JSON desde Ajustes, con recordatorio semanal en
+Inicio. Los montos usan el formato de El Salvador ($1,161.02).
+
 Otras ayudas: **búsqueda general** (botón de lupa o tecla `/`: clientes con todos sus vehículos, placas, VIN,
 órdenes y cotizaciones), **paquetes de servicios** en Ajustes para agregar a una cotización con un toque, y
 **búsqueda por VIN** en el formulario del vehículo (servicio gratuito vPIC de NHTSA; funciona mejor con

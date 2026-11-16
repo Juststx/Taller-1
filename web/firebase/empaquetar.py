@@ -20,7 +20,7 @@ def script_hashes(html):
 def headers(html, extra_connect=''):
     csp = '; '.join([
         "default-src 'self'",
-        "script-src 'self' %s https://www.gstatic.com https://www.google.com/recaptcha/" % ' '.join(script_hashes(html)),
+        "script-src 'self' %s https://www.gstatic.com https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/ https://www.google.com/recaptcha/" % ' '.join(script_hashes(html)),
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src https://fonts.gstatic.com",
         "img-src 'self' data: blob: https://upload.wikimedia.org",

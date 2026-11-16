@@ -66,13 +66,13 @@ service cloud.firestore {
       allow delete: if canDelete();
     }
 
-    // Fotos y firma de la recepción de cada orden. La firma del cliente no se reemplaza ni se borra salvo
-    // administración o recepción.
+    // Fotos (recepción, antes y después) y firmas de recepción y entrega de cada orden. Las firmas del cliente
+    // no se reemplazan ni se borran salvo administración o recepción.
     match /ordenes/{id}/imagenes/{img} {
       allow read: if staff();
       allow create: if staff() && isImage(request.resource.data.data);
-      allow update: if isImage(request.resource.data.data) && (canDelete() || (staff() && img != 'firma'));
-      allow delete: if canDelete() || (staff() && img != 'firma');
+      allow update: if isImage(request.resource.data.data) && (canDelete() || (staff() && !(img in ['firma', 'firma-entrega'])));
+      allow delete: if canDelete() || (staff() && !(img in ['firma', 'firma-entrega']));
     }
 
     // Copia de la cotización que ve el cliente por el enlace. Quien tenga el enlace la puede leer
