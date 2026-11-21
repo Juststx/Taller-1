@@ -1,7 +1,7 @@
 // Service worker: keeps the app shell on the phone so it opens fast and installs as an app.
 // The page itself is always fetched fresh when there is internet; data goes straight to Firebase.
-const VERSION = 'taller-v6';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
+const VERSION = 'taller-v7';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/icons/favicon-32.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,9 +20,9 @@ self.addEventListener('fetch', (e) => {
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then((res) => {
       const copy = res.clone();
-      caches.open(VERSION).then((c) => c.put('./index.html', copy));
+      caches.open(VERSION).then((c) => c.put('/index.html', copy));
       return res;
-    }).catch(() => caches.match('./index.html')));
+    }).catch(() => caches.match('/index.html')));
     return;
   }
 

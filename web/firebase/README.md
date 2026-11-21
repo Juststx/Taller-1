@@ -28,7 +28,7 @@ solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga
 2. **Recepción**: kilometraje, combustible, checklist, observaciones, fotos (se comprimen en el teléfono)
    y firma del cliente con el dedo. Se puede descargar la hoja de recepción para imprimir o guardar como PDF.
 3. **Cotización** desde la orden. Al enviarla por WhatsApp, Gmail o copiando el enlace, el cliente la abre
-   en `index.html?c=<token>` (sin cuenta) y la aprueba o rechaza; la cotización y la orden se actualizan solas.
+   en `/q/<código>` (sin cuenta; los enlaces antiguos `?c=<código>` siguen funcionando) y la aprueba o rechaza; la cotización y la orden se actualizan solas.
 4. **Reparación y cobros**: estados de la orden, mecánico asignado, anticipos y pagos (efectivo, tarjeta,
    transferencia), saldo pendiente y mensaje de WhatsApp para avisar que el vehículo está listo.
 5. **Agenda**: citas por semana con recordatorio por WhatsApp; al llegar el cliente, la cita se convierte en
@@ -65,6 +65,14 @@ registrada y activa en "Usuarios" no puede leer ni escribir nada.
 `manifest.webmanifest`, `sw.js` e `icons/` hacen que la página se instale como app (ícono propio, pantalla
 completa, abre sin internet). Al publicar una versión nueva de `index.html`, la app la toma sola la próxima vez
 que se abre con internet. Si cambian los íconos u otros archivos, sube también `sw.js` con `VERSION` actualizado.
+
+## Pendiente para más adelante
+
+- **Dominio propio** (por ejemplo `tallerautomotriz.com`): se compra (unos 10–15 USD al año) y se conecta a Netlify en
+  *Domain management*; luego se agrega en Firebase → Authentication → Dominios autorizados. Los enlaces de las
+  cotizaciones (`/q/<código>`) quedan con ese dominio sin cambiar nada más.
+- **Avisos con la app cerrada** cuando un cliente aprueba: con la app ntfy (gratis) o con Firebase en plan Blaze y una
+  función que envíe notificaciones.
 
 ## Seguridad
 

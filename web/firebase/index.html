@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Taller">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <title>Taller Mecánico</title>
 <script>try { var t = localStorage.getItem('taller-tema'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -1429,9 +1429,15 @@ function nextOtNumber() {
   const max = S.ordenes.reduce((m, o) => Math.max(m, parseInt(String(o.numero || '').replace(/\D/g, ''), 10) || 0), 0);
   return 'OT-' + String(max + 1).padStart(4, '0');
 }
-function randomToken() {
-  const b = crypto.getRandomValues(new Uint8Array(18));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const CODE_CHARS = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function randomToken(len = 10) {
+  let out = '';
+  while (out.length < len) {
+    for (const b of crypto.getRandomValues(new Uint8Array(len * 2))) {
+      if (b < 224 && out.length < len) out += CODE_CHARS[b % 56]; // 224 = 4 × 56 keeps every character equally likely
+    }
+  }
+  return out;
 }
 
 function orderTable(list, emptyMsg, { owner = true } = {}) {
@@ -1839,7 +1845,7 @@ function editReception(o) {
 // Each sent quote gets a copy in "publicas/<token>" that anyone with the link can read and answer (see firestore.rules).
 const pendingTokens = {};
 const quoteToken = (q) => q.token || (pendingTokens[q.id] ||= randomToken());
-const quoteLink = (q) => `${location.origin}${location.pathname}?c=${quoteToken(q)}`;
+const quoteLink = (q) => `${location.origin}/q/${quoteToken(q)}`;
 function publicCopy(q) {
   const c = cliente(q.clienteId) || {}, v = vehiculo(q.vehiculoId), cfg = S.config;
   return { estado: q.estado === 'borrador' ? 'enviada' : q.estado, numero: q.numero, creada: q.creada || '', validez: q.validez || '', impuesto: q.impuesto || 0,
@@ -2748,8 +2754,9 @@ async function start() {
   S.db = firebase.firestore();
   S.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
   $('#logout').onclick = () => firebase.auth().signOut();
-  const publico = new URLSearchParams(location.search).get('c');
-  if (publico !== null) { showPublic(/^[A-Za-z0-9_-]{16,64}$/.test(publico) ? publico : ''); return; }
+  const ruta = location.pathname.match(/^\/q\/([^/]*)\/?$/);
+  const publico = ruta ? decodeURIComponent(ruta[1]) : new URLSearchParams(location.search).get('c');
+  if (publico !== null) { showPublic(/^[A-Za-z0-9_-]{8,64}$/.test(publico) ? publico : ''); return; }
   firebase.auth().onAuthStateChanged(async (u) => {
     unsubs.forEach((f) => f()); unsubs = [];
     Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [], me: null, myId: null, ready: false });
@@ -2772,7 +2779,7 @@ async function start() {
 }
 // ---------- Installable app ----------
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
 // Chrome / Edge on Android and PC offer installation through this event; iPhone uses "Agregar a inicio".
 let installPrompt = null;

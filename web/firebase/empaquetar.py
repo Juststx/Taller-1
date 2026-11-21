@@ -45,7 +45,7 @@ def main(salida):
     html = open(os.path.join(AQUI, 'index.html'), encoding='utf-8').read()
     open(os.path.join(AQUI, '_headers'), 'w', encoding='utf-8').write(headers(html))
     with zipfile.ZipFile(salida, 'w', zipfile.ZIP_DEFLATED) as z:
-        for f in ['index.html', 'manifest.webmanifest', 'sw.js', '_headers']:
+        for f in ['index.html', 'manifest.webmanifest', 'sw.js', '_headers', '_redirects']:
             z.write(os.path.join(AQUI, f), f)
         for f in sorted(os.listdir(os.path.join(AQUI, 'icons'))):
             z.write(os.path.join(AQUI, 'icons', f), 'icons/' + f)
