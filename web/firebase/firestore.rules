@@ -42,6 +42,30 @@ service cloud.firestore {
       allow delete: if canDelete() && col in ['clientes', 'vehiculos', 'citas'];
     }
 
+    // Inventario: todos lo consultan; administración y recepción lo manejan. El resto del personal solo puede
+    // descontar existencias (al entregar una orden), nunca sumarlas ni cambiar precios.
+    match /repuestos/{id} {
+      allow read: if staff();
+      allow create, delete: if canDelete();
+      allow update: if canDelete()
+        || (staff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])
+            && request.resource.data.stock <= resource.data.stock);
+    }
+    // Historial de movimientos: se agrega, no se edita (solo administración puede borrar).
+    match /movimientos/{id} {
+      allow read: if staff();
+      allow create: if staff() && (canDelete() || request.resource.data.tipo == 'salida');
+      allow update, delete: if admin();
+    }
+    match /proveedores/{id} {
+      allow read: if staff();
+      allow write: if canDelete();
+    }
+    // Gastos y ganancia: solo administración y recepción.
+    match /gastos/{id} {
+      allow read, write: if canDelete();
+    }
+
     // Paquetes de servicios: todos los usan, administración y recepción los editan.
     match /paquetes/{id} {
       allow read: if staff();

@@ -34,7 +34,13 @@ solo `index.html`, las cabeceras quedan con huellas viejas y la página no carga
 5. **Agenda**: citas por semana con recordatorio por WhatsApp; al llegar el cliente, la cita se convierte en
    orden. Los vehículos con *próximo mantenimiento* (desde su ficha o al entregar una orden) aparecen 30 días
    antes en "Mantenimientos por avisar".
-6. **Reportes**: cobrado en el mes, por cobrar, órdenes ingresadas y entregadas, por método de pago y por mecánico.
+6. **Inventario**: repuestos con código, categoría, existencias, mínimo, costo, precio, proveedor y ubicación.
+   *Registrar compra* sube las existencias, actualiza el costo y anota la compra en Gastos. En la cotización,
+   *+ Del inventario* agrega el repuesto con su precio; al entregar la orden se descuenta solo (una vez). Cada
+   repuesto tiene su historial de movimientos (entradas, salidas, ajustes por conteo). Inicio avisa lo que se está
+   agotando y en *Proveedores* se arma el pedido por WhatsApp.
+7. **Reportes**: ganancia del mes (cobrado − gastos, gastos por categoría y costo de los repuestos usados; solo
+   administración y recepción), cobrado, por cobrar, órdenes ingresadas y entregadas, por método de pago y por mecánico.
 
 Documentos y respaldo: **PDF** de la cotización, del recibo de cada pago (también como mensaje de WhatsApp) y de la
 hoja de recepción y entrega (con fotos de antes y después y las firmas); en el celular se comparten directo a
@@ -54,8 +60,8 @@ que ve el cliente se guarda en `publicas/<token>`; las reglas solo le permiten l
 | Rol | Puede |
 | --- | --- |
 | Administrador | Todo: usuarios, ajustes, eliminar |
-| Recepción | Clientes, vehículos y cotizaciones, incluido eliminar |
-| Mecánico | Registrar y editar, sin eliminar |
+| Recepción | Clientes, vehículos, cotizaciones, inventario, compras y gastos, incluido eliminar |
+| Mecánico | Registrar y editar, sin eliminar; ve el inventario sin costos ni gastos y solo puede descontar existencias |
 
 Las reglas de `firestore.rules` aplican estos permisos en el servidor: una cuenta que no esté
 registrada y activa en "Usuarios" no puede leer ni escribir nada.
@@ -74,11 +80,23 @@ que se abre con internet. Si cambian los íconos u otros archivos, sube también
 - **Avisos con la app cerrada** cuando un cliente aprueba: con la app ntfy (gratis) o con Firebase en plan Blaze y una
   función que envíe notificaciones.
 
+## Pruebas automáticas
+
+En `pruebas/` hay pruebas que corren contra el emulador de Firebase (no tocan el proyecto real): reglas de
+seguridad e intentos de ataque, el flujo completo en el navegador con las mismas cabeceras de seguridad de Netlify,
+PDF, Excel y menú del celular.
+
+```
+cd pruebas && npm install
+npm test          # todas las pruebas
+npm run capturas  # capturas de pantalla en pruebas/salida/
+```
+
 ## Seguridad
 
 - **Reglas de Firestore** (`firestore.rules`): solo el personal activo lee o escribe; los pagos registrados,
   la firma del cliente y las cotizaciones aprobadas solo los cambian administración o recepción; las fotos solo
-  aceptan imágenes reales; el enlace público solo permite responder una vez.
+  aceptan imágenes reales; los gastos solo los ven administración y recepción; el mecánico no puede sumar existencias ni cambiar precios; el enlace público solo permite responder una vez.
 - **Página**: todo dato se escapa antes de mostrarse y las imágenes se validan antes de usarse.
 - **Cabeceras** (`_headers`): CSP con huellas de los scripts (bloquea código inyectado y el envío de datos a
   otros sitios), sin marcos (anti-clickjacking), `nosniff`, HSTS y permisos del navegador limitados a la cámara.

@@ -216,7 +216,7 @@ img { max-width: 100%; }
 /* Phone: brand + menu button; sections open as a list below the bar. */
 .menu-btn { display: none; align-items: center; gap: 8px; margin: 0 0 10px auto; background: none; border: 1px solid rgb(255 255 255 / .28); color: var(--ink-bar-fg); border-radius: var(--radius); padding: 7px 12px; cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 1rem; letter-spacing: .04em; text-transform: uppercase; }
 .nav-wrap { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 0; }
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .topbar .wrap { gap: 10px; }
   .brand { flex: 1; }
   .menu-btn { display: inline-flex; }
@@ -230,7 +230,7 @@ img { max-width: 100%; }
 .theme-btn { order: 3; flex-shrink: 0; display: inline-grid; place-items: center; width: 38px; height: 38px; margin-bottom: 10px; background: none; border: 1px solid rgb(255 255 255 / .28); color: var(--ink-bar-fg); border-radius: var(--radius); cursor: pointer; }
 .theme-btn:hover, .menu-btn:hover { border-color: rgb(255 255 255 / .6); }
 .nav-wrap { order: 2; }
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .theme-btn { order: 1; margin-left: auto; }
   .menu-btn { order: 2; margin-left: 0; }
   .nav-wrap { order: 3; }
@@ -271,7 +271,7 @@ img { max-width: 100%; }
 .public-wrap { max-width: 760px; margin: 0 auto; }
 .topbar .wrap { max-width: 1400px; }
 @media (max-width: 480px) { .hide-sm { display: none; } }
-@media (min-width: 1181px) and (max-width: 1499px) { #who-name { display: none; } .tab { padding-left: 10px; padding-right: 10px; } }
+@media (min-width: 1321px) and (max-width: 1499px) { #who-name { display: none; } .tab { padding-left: 10px; padding-right: 10px; } }
 .ok-notice { background: var(--ok-soft); color: var(--ok); }
 /* Global search */
 .gsearch { position: fixed; inset: 0; z-index: 45; background: rgb(10 12 14 / .5); display: flex; justify-content: center; align-items: flex-start; padding: calc(8vh + env(safe-area-inset-top, 0px)) 16px 16px; }
@@ -287,7 +287,7 @@ img { max-width: 100%; }
 .gs-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 3px 10px 3px 4px; cursor: pointer; color: var(--fg); font: inherit; font-size: .88rem; }
 .gs-chip .logo { width: 24px; height: 24px; }
 .gs-chip .logo svg { width: 15px; height: 15px; }
-@media (max-width: 1180px) { .search-btn + .theme-btn { margin-left: 0; } }
+@media (max-width: 1320px) { .search-btn + .theme-btn { margin-left: 0; } }
 /* Agenda */
 .ag-day { border-top: 1px solid var(--line); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
 .ag-day h3 { margin: 0; }
@@ -304,6 +304,11 @@ img { max-width: 100%; }
 .work-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 560px) { .work-cols { grid-template-columns: 1fr; } }
 .work-cols h3 { margin-bottom: 6px; }
+/* Inventory and expenses */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: .9rem; }
+.bar { grid-column: 1 / -1; height: 8px; background: var(--sunken); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -330,6 +335,7 @@ img { max-width: 100%; }
       <button class="tab" data-view="agenda">Agenda</button>
       <button class="tab" data-view="clientes">Clientes</button>
       <button class="tab" data-view="vehiculos">Vehículos</button>
+      <button class="tab" data-view="inventario">Inventario</button>
       <button class="tab" data-view="reportes">Reportes</button>
       <button class="tab" data-view="personal">Usuarios</button>
       <button class="tab" data-view="ajustes">Ajustes</button>
@@ -362,13 +368,13 @@ const APP_CHECK_KEY = '';
 const S = {
   db: null, user: null, ready: false, offline: false,
   canWrite: true, canAdmin: false, canDelete: false, myId: null, me: null,
-  clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [],
+  clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [], repuestos: [], movimientos: [], proveedores: [], gastos: [],
   config: { nombre: 'Mi Taller', telefono: '', correo: '', direccion: '', moneda: 'USD', unidad: 'mi', impuesto: 0, validez: 15, pie: 'Gracias por confiar en nosotros.' },
   loaded: new Set(),
   view: 'inicio',
   q: { cotizaciones: '', estado: '', clientes: '', vehiculos: '' },
 };
-const VIEWS = ['inicio', 'cotizaciones', 'ordenes', 'agenda', 'clientes', 'vehiculos', 'reportes', 'personal', 'ajustes'];
+const VIEWS = ['inicio', 'cotizaciones', 'ordenes', 'agenda', 'clientes', 'vehiculos', 'inventario', 'reportes', 'personal', 'ajustes'];
 const ESTADOS = { borrador: 'Borrador', enviada: 'Enviada', aprobada: 'Aprobada', rechazada: 'Rechazada' };
 const TIPOS = { mano_obra: 'Mano de obra', repuesto: 'Repuesto', otro: 'Otro' };
 const ROLES = { admin: 'Administrador', recepcion: 'Recepción', mecanico: 'Mecánico' };
@@ -701,6 +707,7 @@ views.inicio = {
   shell: () => `${banner()}<div class="head"><div><h1 id="hello">Inicio</h1><p class="sub">Resumen del taller al día de hoy.</p></div>
     <div class="toolbar">${S.canWrite ? '<button class="btn primary" data-act="new-quote">+ Nueva cotización</button>' : ''}</div></div>
     ${S.canAdmin && (!S.config.ultimoRespaldo || Date.now() - new Date(S.config.ultimoRespaldo) > 7 * 864e5) ? `<div class="notice info" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>${S.config.ultimoRespaldo ? `Tu último respaldo fue el ${fdate(S.config.ultimoRespaldo)}.` : 'Todavía no has descargado un respaldo de tus datos.'} Te recomendamos uno por semana.</span><button class="btn small" data-goto="ajustes">Hacer respaldo</button></div>` : ''}
+    <div data-part="alertas"></div>
     <div data-part="stats"></div>
     <section class="panel panel-pad" style="margin-bottom:16px"><div class="head" style="margin:0 0 8px"><h2>Citas de hoy</h2><div class="toolbar">${S.canWrite ? '<button class="btn small" data-act="new-cita">+ Nueva cita</button>' : ''}<button class="btn small" data-goto="agenda">Ver agenda</button></div></div><div data-part="hoy"></div></section>
     <section class="panel" style="margin-bottom:16px"><div class="panel-pad head" style="margin:0;padding-bottom:0"><h2>En el taller</h2>${S.canWrite ? '<button class="btn small" data-act="new-order">+ Nueva orden</button>' : ''}</div><div data-part="taller"></div></section>
@@ -720,6 +727,8 @@ views.inicio = {
       <div class="stat hl"><span class="label">Cobrado este mes</span><span class="value" style="font-size:1.5rem">${money(S.ordenes.flatMap((o) => o.pagos || []).filter((p) => localMonth(p.fecha) === mes).reduce((s, p) => s + p.monto, 0))}</span></div>
       <div class="stat"><span class="label">Aprobado este mes</span><span class="value" style="font-size:1.5rem">${money(aprobMes)}</span><span class="muted" style="font-size:.82rem">Total histórico ${money(aprob)}</span></div>
     </div>`;
+    const bajos = S.repuestos.filter(bajoMinimo);
+    $('[data-part=alertas]', root).innerHTML = bajos.length ? `<div class="notice" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>${bajos.length === 1 ? `Se está agotando: ${esc(bajos[0].nombre)}.` : `${bajos.length} repuestos se están agotando.`}</span><button class="btn small" data-goto="inventario">Ver inventario</button></div>` : '';
     const citasHoy = S.citas.filter((c) => c.fecha === localDate() && c.estado !== 'cancelada');
     const due = maintenanceDue().length;
     $('[data-part=hoy]', root).innerHTML = (citasHoy.length ? citasHoy.map(citaRow).join('') : '<p class="muted" style="margin:0">No hay citas para hoy.</p>')
@@ -834,7 +843,7 @@ views.ajustes = {
     </div></fieldset><p class="err" id="cfg-err"></p>
     ${S.canAdmin ? '<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" type="submit">Guardar ajustes</button></div>' : ''}</form>
     ${S.canAdmin ? `<section class="panel panel-pad" style="margin-top:16px;display:flex;flex-direction:column;gap:10px"><h2>Respaldo de datos</h2>
-      <p class="sub" style="margin:0">Descarga tus clientes, vehículos, cotizaciones, órdenes, pagos y citas en un archivo de Excel. Guárdalo en tu computadora o en Google Drive; lo ideal es una vez por semana.</p>
+      <p class="sub" style="margin:0">Descarga tus clientes, vehículos, cotizaciones, órdenes, pagos, citas, inventario y gastos en un archivo de Excel. Guárdalo en tu computadora o en Google Drive; lo ideal es una vez por semana.</p>
       <p class="strong" style="margin:0">${S.config.ultimoRespaldo ? `Último respaldo: ${fdate(S.config.ultimoRespaldo)}` : 'Todavía no has descargado ningún respaldo.'}</p>
       <div class="toolbar"><button class="btn primary" id="bk-xlsx">Descargar respaldo en Excel</button><button class="btn" id="bk-json">Respaldo completo (técnico)</button></div>
       <p class="muted" style="margin:0;font-size:.85rem">Las fotos y firmas no van en el archivo; siguen guardadas en Firebase.</p></section>` : ''}
@@ -878,7 +887,7 @@ function renderView(force) {
 // Global clicks for rows and actions
 $('#view').addEventListener('click', (e) => {
   const g = e.target.closest('[data-goto]'); if (g) return go(g.dataset.goto);
-  const t = e.target.closest('[data-open-quote],[data-open-order],[data-open-client],[data-open-vehicle],[data-open-staff],[data-open-paquete],[data-act]');
+  const t = e.target.closest('[data-open-quote],[data-open-order],[data-open-client],[data-open-vehicle],[data-open-staff],[data-open-paquete],[data-open-repuesto],[data-open-gasto],[data-act]');
   if (!t) return;
   if (t.dataset.openQuote) return showQuote(t.dataset.openQuote);
   if (t.dataset.openOrder) return showOrder(t.dataset.openOrder);
@@ -886,11 +895,17 @@ $('#view').addEventListener('click', (e) => {
   if (t.dataset.openVehicle) return showVehicle(t.dataset.openVehicle);
   if (t.dataset.openStaff) return editStaff(byId(S.personal, t.dataset.openStaff));
   if (t.dataset.openPaquete) return editPaquete(byId(S.paquetes, t.dataset.openPaquete));
+  if (t.dataset.openRepuesto) return showRepuesto(t.dataset.openRepuesto);
+  if (t.dataset.openGasto) return editGasto(byId(S.gastos, t.dataset.openGasto));
   const a = t.dataset.act;
   if (a === 'new-quote') editQuote(null);
   if (a === 'new-order') editOrder(null);
   if (a === 'new-cita') editCita(null);
   if (a === 'new-paquete') editPaquete(null);
+  if (a === 'new-repuesto') editRepuesto(null);
+  if (a === 'new-compra') editCompra();
+  if (a === 'proveedores') showProveedores();
+  if (a === 'new-gasto') editGasto(null);
   if (a === 'new-client') editClient(null);
   if (a === 'new-vehicle') editVehicle(null);
   if (a === 'new-staff') editStaff(null);
@@ -1193,6 +1208,7 @@ function editQuote(q, preset = {}) {
     <section><h3>Detalle del trabajo</h3>
       <div class="table-scroll"><table class="items"><thead><tr><th class="c-kind">Tipo</th><th>Descripción</th><th class="num c-qty">Cant.</th><th class="num c-price">Precio unit.</th><th class="num c-amt">Importe</th><th></th></tr></thead><tbody id="items"></tbody></table></div>
       <div class="toolbar" style="margin-top:8px"><button class="btn small" data-add="mano_obra">+ Mano de obra</button><button class="btn small" data-add="repuesto">+ Repuesto</button><button class="btn small" data-add="otro">+ Otro</button>
+        ${S.repuestos.some((r) => r.activo !== false) ? `<select id="f-repuesto" style="width:auto"><option value="">+ Del inventario…</option>${S.repuestos.filter((r) => r.activo !== false).map((r) => `<option value="${esc(r.id)}">${esc(repLabel(r))} · ${esc(fmtCant(r.stock))} disp. · ${money(r.precio)}</option>`).join('')}</select>` : ''}
         ${S.paquetes.length ? `<select id="f-paquete" style="width:auto"><option value="">+ Agregar paquete…</option>${S.paquetes.map((p) => `<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('')}</select>` : ''}</div>
     </section>
     <div class="grid2" style="align-items:start">
@@ -1217,9 +1233,9 @@ function editQuote(q, preset = {}) {
     <td style="min-width:180px"><input data-k="desc" value="${esc(i.desc)}" placeholder="Ej: Cambio de pastillas delanteras"></td>
     <td class="c-qty"><input data-k="cantidad" class="num" type="number" min="0" step="0.01" value="${esc(i.cantidad)}"></td>
     <td class="c-price"><input data-k="precio" class="num" type="number" min="0" step="0.01" value="${esc(i.precio)}"></td>
-    <td class="num c-amt" data-amt></td><td><button class="btn ghost small" data-rm aria-label="Quitar línea">✕</button></td></tr>`;
-  const read = () => $$('tr', tbody).map((tr) => ({ tipo: $('[data-k=tipo]', tr).value, desc: $('[data-k=desc]', tr).value.trim(),
-    cantidad: Number($('[data-k=cantidad]', tr).value) || 0, precio: r2(Number($('[data-k=precio]', tr).value) || 0) }));
+    <td class="num c-amt" data-amt></td><td><input type="hidden" data-k="rid" value="${esc(i.repuestoId || '')}"><button class="btn ghost small" data-rm aria-label="Quitar línea">✕</button></td></tr>`;
+  const read = () => $$('tr', tbody).map((tr) => { const rid = $('[data-k=rid]', tr)?.value || ''; return { tipo: $('[data-k=tipo]', tr).value, desc: $('[data-k=desc]', tr).value.trim(),
+    cantidad: Number($('[data-k=cantidad]', tr).value) || 0, precio: r2(Number($('[data-k=precio]', tr).value) || 0), ...(rid ? { repuestoId: rid } : {}) }; });
   const recalc = () => {
     $$('tr', tbody).forEach((tr) => { $('[data-amt]', tr).textContent = money((Number($('[data-k=cantidad]', tr).value) || 0) * (Number($('[data-k=precio]', tr).value) || 0)); });
     const t = totals({ items: read(), descuento: $('#f-descuento', sheet).value, impuesto: $('#f-impuesto', sheet).value });
@@ -1231,6 +1247,14 @@ function editQuote(q, preset = {}) {
   $$('[data-add]', sheet).forEach((b) => b.onclick = () => { tbody.insertAdjacentHTML('beforeend', row({ tipo: b.dataset.add, desc: '', cantidad: 1, precio: 0 })); recalc(); $('tr:last-child [data-k=desc]', tbody).focus(); });
   tbody.addEventListener('click', (e) => { if (e.target.closest('[data-rm]')) { e.target.closest('tr').remove(); recalc(); } });
   sheet.addEventListener('input', recalc);
+  $('#f-repuesto', sheet)?.addEventListener('change', (e) => {
+    const r = repuesto(e.target.value); e.target.value = '';
+    if (!r) return;
+    $$('tr', tbody).forEach((tr) => { if (!$('[data-k=desc]', tr).value.trim() && !Number($('[data-k=precio]', tr).value)) tr.remove(); });
+    tbody.insertAdjacentHTML('beforeend', row({ tipo: 'repuesto', desc: repLabel(r), cantidad: 1, precio: r.precio || 0, repuestoId: r.id }));
+    recalc();
+    toast(Number(r.stock || 0) > 0 ? `${r.nombre} agregado (${fmtCant(r.stock)} disponibles)` : `${r.nombre} agregado. Ojo: no hay existencias.`);
+  });
   $('#f-paquete', sheet)?.addEventListener('change', (e) => {
     const pq = byId(S.paquetes, e.target.value); e.target.value = '';
     if (!pq) return;
@@ -1521,6 +1545,7 @@ async function setOrderState(o, estado, extra = {}) {
   const d = { estado, historial: [...(o.historial || []), { estado, fecha: now, por: S.myId || '' }], ...extra };
   if (estado === 'entregado') d.entregada = now;
   await patch('ordenes', o.id, d);
+  if (estado === 'entregado') await descontarInventario({ ...o, ...d }).catch((err) => toast(`No se pudo descontar el inventario: ${dbErr(err)}`));
 }
 // When the client approves the quote, an order still waiting moves to repair.
 async function advanceOnApproval(q) {
@@ -1913,7 +1938,7 @@ async function showPublic(token) {
 
 // ---------- Reports ----------
 views.reportes = {
-  shell: () => `${banner()}<div class="head"><div><h1>Reportes</h1><p class="sub">Cobros, trabajos y cotizaciones del mes.</p></div>
+  shell: () => `${banner()}<div class="head"><div><h1>Reportes</h1><p class="sub">${S.canDelete ? 'Ganancia, gastos, cobros y trabajos del mes.' : 'Cobros, trabajos y cotizaciones del mes.'}</p></div>
     <div class="toolbar"><label class="field" style="flex-direction:row;align-items:center;gap:8px"><span>Mes</span><input type="month" id="rep-mes" value="${esc(S.q.mes || today().slice(0, 7))}" style="width:auto"></label></div></div>
     <div data-part="rep"></div>`,
   bind(root) { $('#rep-mes', root).onchange = (e) => { S.q.mes = e.target.value || today().slice(0, 7); this.fill(root); }; },
@@ -1932,7 +1957,7 @@ views.reportes = {
       return [p.nombre, os.length, r2(os.reduce((s, o) => s + otTotal(o), 0))];
     }).filter(([, n]) => n);
     const sinAsignar = entregadas.filter((o) => !o.tecnico).length;
-    $('[data-part=rep]', root).innerHTML = `<div class="stats">
+    $('[data-part=rep]', root).innerHTML = `${S.canDelete ? financePanel(mes, cobrado) : ''}<div class="stats">
         <div class="stat hl"><span class="label">Cobrado en el mes</span><span class="value" style="font-size:1.6rem">${money(cobrado)}</span><span class="muted" style="font-size:.82rem">${pagos.length} pago${pagos.length === 1 ? '' : 's'}</span></div>
         <div class="stat"><span class="label">Por cobrar (todas las órdenes)</span><span class="value" style="font-size:1.6rem">${money(porCobrar)}</span></div>
         <div class="stat"><span class="label">Órdenes ingresadas</span><span class="value">${ingresadas.length}</span></div>
@@ -1962,6 +1987,7 @@ function searchAll(text) {
     vehiculos: S.vehiculos.filter((v) => hit(v.placa, v.vin, `${v.marca} ${v.modelo}`, v.color)).slice(0, 8),
     ordenes: S.ordenes.filter((o) => hit(o.numero)).slice(0, 5),
     cotizaciones: S.cotizaciones.filter((q) => hit(q.numero)).slice(0, 5),
+    repuestos: S.repuestos.filter((r) => r.activo !== false && hit(r.nombre, r.codigo, r.categoria)).slice(0, 6),
   };
 }
 function openSearch() {
@@ -1969,7 +1995,7 @@ function openSearch() {
   const el = document.createElement('div');
   el.className = 'gsearch';
   el.innerHTML = `<div class="gsearch-box" role="dialog" aria-modal="true" aria-label="Buscar">
-    <div class="gsearch-head"><input id="gs-input" type="search" placeholder="Buscar cliente, teléfono, placa, VIN, orden o cotización" autocomplete="off"><button class="btn ghost small" data-close aria-label="Cerrar">✕</button></div>
+    <div class="gsearch-head"><input id="gs-input" type="search" placeholder="Buscar cliente, teléfono, placa, VIN, orden, cotización o repuesto" autocomplete="off"><button class="btn ghost small" data-close aria-label="Cerrar">✕</button></div>
     <div class="gsearch-res" id="gs-res"><p class="muted" style="margin:0">Escribe al menos una letra. Ej: “Hernández”, “7000 0001”, “P123”, “Hilux”.</p></div></div>`;
   document.body.appendChild(el);
   const close = () => el.remove();
@@ -1987,16 +2013,18 @@ function openSearch() {
     if (r.vehiculos.length) parts.push(`<h3>Vehículos</h3>${r.vehiculos.map((v) => row(`data-gs-vehicle="${esc(v.id)}"`, `<span class="veh-cell">${brandLogo(v.marca)}${plate(v.placa)}<strong>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio || '')}</strong></span>`, esc(cliente(v.clienteId)?.nombre || ''))).join('')}`);
     if (r.ordenes.length) parts.push(`<h3>Órdenes</h3>${r.ordenes.map((o) => row(`data-gs-order="${esc(o.id)}"`, `<span class="mono strong">${esc(o.numero)}</span> ${otPill(o)}`, esc(`${cliente(o.clienteId)?.nombre || ''} · ${vehiculo(o.vehiculoId)?.placa || ''}`))).join('')}`);
     if (r.cotizaciones.length) parts.push(`<h3>Cotizaciones</h3>${r.cotizaciones.map((q) => row(`data-gs-quote="${esc(q.id)}"`, `<span class="mono strong">${esc(q.numero)}</span> ${pill(q)}`, esc(cliente(q.clienteId)?.nombre || ''))).join('')}`);
+    if (r.repuestos.length) parts.push(`<h3>Repuestos</h3>${r.repuestos.map((p) => row(`data-gs-repuesto="${esc(p.id)}"`, `<strong>${esc(p.nombre)}</strong> ${stockPill(p)}`, esc([p.codigo, money(p.precio)].filter(Boolean).join(' · ')))).join('')}`);
     res.innerHTML = parts.join('') || `<p class="muted" style="margin:0">Nada coincide con “${esc(inp.value)}”.</p>`;
   };
   inp.oninput = draw;
-  inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = $('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote]', res); if (first) first.click(); } };
+  inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = $('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote],[data-gs-repuesto]', res); if (first) first.click(); } };
   el.addEventListener('click', (e) => {
     if (e.target === el || e.target.closest('[data-close]')) return close();
-    const b = e.target.closest('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote]');
+    const b = e.target.closest('[data-gs-client],[data-gs-vehicle],[data-gs-order],[data-gs-quote],[data-gs-repuesto]');
     if (!b) return;
     close();
-    if (b.dataset.gsVehicle) showVehicle(b.dataset.gsVehicle);
+    if (b.dataset.gsRepuesto) showRepuesto(b.dataset.gsRepuesto);
+    else if (b.dataset.gsVehicle) showVehicle(b.dataset.gsVehicle);
     else if (b.dataset.gsClient) showClient(b.dataset.gsClient);
     else if (b.dataset.gsOrder) showOrder(b.dataset.gsOrder);
     else showQuote(b.dataset.gsQuote);
@@ -2543,6 +2571,13 @@ function backupSheets() {
       rows: S.ordenes.flatMap((o) => (o.pagos || []).map((p) => [d(p.fecha), o.numero, cn(o.clienteId), METODOS[p.metodo] || p.metodo, p.monto, p.nota || '', quien(p.por)])) },
     { name: 'Citas', cols: ['Fecha', 'Hora', 'Cliente', 'Placa', 'Motivo', 'Estado'], widths: [14, 8, 26, 12, 34, 12],
       rows: S.citas.map((c) => [d(c.fecha), c.hora, cn(c.clienteId), pl(c.vehiculoId), c.motivo || '', CITA_ESTADOS[c.estado] || c.estado]) },
+    { name: 'Inventario', cols: ['Repuesto', 'Código', 'Categoría', 'Existencias', 'Unidad', 'Mínimo', 'Costo', 'Precio', 'Proveedor', 'Ubicación'], widths: [34, 16, 16, 12, 10, 10, 12, 12, 24, 14],
+      rows: S.repuestos.filter((r) => r.activo !== false).map((r) => [r.nombre, r.codigo || '', r.categoria || '', Number(r.stock || 0), r.unidad || '', Number(r.minimo || 0), Number(r.costo || 0), Number(r.precio || 0), proveedor(r.proveedorId)?.nombre || '', r.ubicacion || '']) },
+    { name: 'Movimientos', cols: ['Fecha', 'Repuesto', 'Movimiento', 'Cantidad', 'Costo', 'Detalle', 'Registró'], widths: [14, 34, 12, 10, 12, 30, 20],
+      rows: S.movimientos.map((m) => [d(m.fecha), repuesto(m.repuestoId)?.nombre || '', MOV_TIPOS[m.tipo] || m.tipo, m.tipo === 'salida' ? -m.cantidad : m.cantidad, Number(m.costo || 0), m.nota || '', quien(m.por)]) },
+    ...(S.canDelete ? [{ name: 'Gastos', cols: ['Fecha', 'Categoría', 'Descripción', 'Forma de pago', 'Monto'], widths: [14, 22, 40, 14, 12],
+      rows: S.gastos.map((g) => [d(g.fecha), g.categoria, g.descripcion || '', METODOS[g.metodo] || g.metodo || '', Number(g.monto || 0)]) }] : []),
+    { name: 'Proveedores', cols: ['Nombre', 'Contacto', 'Teléfono', 'Notas'], widths: [28, 22, 18, 34], rows: S.proveedores.map((p) => [p.nombre, p.contacto || '', p.telefono || '', p.notas || '']) },
     { name: 'Usuarios', cols: ['Nombre', 'Rol', 'Correo', 'Activo'], widths: [26, 16, 28, 8], rows: S.personal.map((p) => [p.nombre, ROLES[p.rol] || p.rol, p.correo || '', p.activo === false ? 'No' : 'Sí']) },
   ];
 }
@@ -2562,9 +2597,305 @@ function backupExcel() {
   toast('Respaldo en Excel descargado'); markBackup();
 }
 function backupJson() {
-  const data = { creado: new Date().toISOString(), config: S.config, clientes: S.clientes, vehiculos: S.vehiculos, cotizaciones: S.cotizaciones, ordenes: S.ordenes, citas: S.citas, paquetes: S.paquetes, personal: S.personal };
+  const data = { creado: new Date().toISOString(), config: S.config, clientes: S.clientes, vehiculos: S.vehiculos, cotizaciones: S.cotizaciones, ordenes: S.ordenes, citas: S.citas, paquetes: S.paquetes,
+    repuestos: S.repuestos, movimientos: S.movimientos, proveedores: S.proveedores, gastos: S.gastos, personal: S.personal };
   saveBlob(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `Respaldo-taller-${localDate()}.json`);
   toast('Respaldo completo descargado'); markBackup();
+}
+
+// ---------- Parts inventory: stock, purchases, movements (kardex) and suppliers ----------
+const UNIDADES_REP = ['unidad', 'juego', 'galón', 'litro', 'cuarto', 'metro', 'caja', 'par'];
+const MOV_TIPOS = { entrada: 'Entrada', salida: 'Salida', ajuste: 'Ajuste' };
+const GASTO_CATS = ['Repuestos (compras)', 'Renta', 'Luz y agua', 'Internet y teléfono', 'Sueldos', 'Herramientas y equipo', 'Combustible', 'Impuestos', 'Mantenimiento del local', 'Publicidad', 'Otros'];
+const inc = (n) => firebase.firestore.FieldValue.increment(n);
+const proveedor = (id) => byId(S.proveedores, id);
+const repuesto = (id) => byId(S.repuestos, id);
+const bajoMinimo = (r) => r.activo !== false && Number(r.minimo) > 0 && Number(r.stock || 0) <= Number(r.minimo);
+const stockPill = (r) => {
+  const n = Number(r.stock || 0);
+  if (n <= 0) return `<span class="pill st-rechazada">${esc(fmtCant(n))}</span>`;
+  return bajoMinimo(r) ? `<span class="pill st-vencida">${esc(fmtCant(n))}</span>` : `<span class="pill st-aprobada">${esc(fmtCant(n))}</span>`;
+};
+const fmtCant = (n) => Number(n || 0).toLocaleString(LOC, { maximumFractionDigits: 2 });
+const repLabel = (r) => `${r.nombre}${r.codigo ? ` · ${r.codigo}` : ''}`;
+
+views.inventario = {
+  shell: () => `${banner()}<div class="head"><div><h1>Inventario</h1><p class="sub">Repuestos y materiales: existencias, costos y compras.</p></div>
+    <div class="toolbar"><input class="search" id="q-inv" placeholder="Buscar repuesto, código o categoría" value="${esc(S.q.inv || '')}">
+    <select id="q-inv-f" style="width:auto"><option value="">Todos</option><option value="bajo">Por agotarse</option><option value="cero">Sin existencias</option></select>
+    ${S.canDelete ? '<button class="btn" data-act="proveedores">Proveedores</button><button class="btn" data-act="new-compra">Registrar compra</button><button class="btn primary" data-act="new-repuesto">+ Repuesto</button>' : ''}</div></div>
+    <div data-part="stats"></div><section class="panel" data-part="list"></section>`,
+  bind(root) {
+    $('#q-inv-f', root).value = S.q.invF || '';
+    $('#q-inv', root).oninput = (e) => { S.q.inv = e.target.value; this.fill(root); };
+    $('#q-inv-f', root).onchange = (e) => { S.q.invF = e.target.value; this.fill(root); };
+  },
+  fill(root) {
+    const t = norm(S.q.inv || ''), f = S.q.invF || '';
+    const activos = S.repuestos.filter((r) => r.activo !== false);
+    const list = activos.filter((r) => (!t || [r.nombre, r.codigo, r.categoria, proveedor(r.proveedorId)?.nombre].some((x) => norm(x).includes(t)))
+      && (f === 'bajo' ? bajoMinimo(r) : f === 'cero' ? Number(r.stock || 0) <= 0 : true));
+    const valor = r2(activos.reduce((s, r) => s + Math.max(0, Number(r.stock || 0)) * (Number(r.costo) || 0), 0));
+    const bajos = activos.filter(bajoMinimo).length;
+    $('[data-part=stats]', root).innerHTML = `<div class="stats">
+      <div class="stat"><span class="label">Repuestos</span><span class="value">${activos.length}</span></div>
+      <div class="stat ${bajos ? 'hl' : ''}"><span class="label">Por agotarse</span><span class="value">${bajos}</span></div>
+      <div class="stat"><span class="label">Sin existencias</span><span class="value">${activos.filter((r) => Number(r.stock || 0) <= 0).length}</span></div>
+      ${S.canDelete ? `<div class="stat"><span class="label">Valor del inventario (a costo)</span><span class="value" style="font-size:1.5rem">${money(valor)}</span></div>` : ''}</div>`;
+    $('[data-part=list]', root).innerHTML = loading() ? '<div class="empty"><strong>Cargando inventario…</strong></div>'
+      : list.length ? `<div class="table-scroll"><table><thead><tr><th>Repuesto</th><th class="hide-sm">Código</th><th class="hide-sm">Categoría</th><th class="num">Existencias</th><th class="num hide-sm">Mínimo</th>${S.canDelete ? '<th class="num hide-sm">Costo</th>' : ''}<th class="num">Precio</th><th class="hide-sm">Proveedor</th></tr></thead><tbody>
+        ${list.map((r) => `<tr class="row" data-open-repuesto="${esc(r.id)}"><td class="strong">${esc(r.nombre)}</td><td class="mono muted hide-sm">${esc(r.codigo || '—')}</td><td class="muted hide-sm">${esc(r.categoria || '—')}</td>
+          <td class="num">${stockPill(r)} <span class="muted" style="font-size:.8rem">${esc(r.unidad || '')}</span></td><td class="num muted hide-sm">${r.minimo ? esc(fmtCant(r.minimo)) : '—'}</td>
+          ${S.canDelete ? `<td class="num hide-sm">${money(r.costo)}</td>` : ''}<td class="num strong">${money(r.precio)}</td><td class="hide-sm">${esc(proveedor(r.proveedorId)?.nombre || '—')}</td></tr>`).join('')}</tbody></table></div>`
+        : `<div class="empty"><strong>${activos.length ? 'Ningún repuesto coincide' : 'Todavía no hay repuestos'}</strong>${activos.length ? '' : '<span>Agrega los repuestos que guardas en el taller con “+ Repuesto”, o regístralos al hacer una compra.</span>'}</div>`;
+  },
+};
+
+function editRepuesto(r) {
+  const x = r || { unidad: 'unidad', stock: 0, minimo: 0, costo: 0, precio: 0, activo: true };
+  const cats = [...new Set(S.repuestos.map((p) => p.categoria).filter(Boolean))].sort();
+  const provOpts = [['', 'Sin proveedor'], ...S.proveedores.map((p) => [p.id, p.nombre])];
+  const sheet = openSheet(r ? 'Editar repuesto' : 'Nuevo repuesto', `<div class="grid2">
+      ${input('f-nombre', 'Nombre', x.nombre, { req: true, span: true, attrs: 'placeholder="Ej: Pastillas de freno delanteras Toyota Hilux"' })}
+      ${input('f-codigo', 'Código / número de parte', x.codigo, { attrs: 'autocomplete="off"' })}
+      ${input('f-categoria', 'Categoría', x.categoria, { attrs: 'list="cat-list" placeholder="Ej: Frenos, Filtros, Aceites"' })}<datalist id="cat-list">${cats.map((c) => `<option value="${esc(c)}">`).join('')}</datalist>
+      ${select('f-unidad', 'Se cuenta por', UNIDADES_REP.map((u) => [u, u]), x.unidad)}
+      ${select('f-proveedor', 'Proveedor habitual', provOpts, x.proveedorId)}
+      ${input('f-costo', 'Costo (lo que te cuesta)', x.costo, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}
+      ${input('f-precio', 'Precio de venta al cliente', x.precio, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}
+      ${r ? `<label class="field"><span>Existencias</span><input value="${esc(fmtCant(x.stock))} (se cambian con compras o “Ajustar existencias”)" disabled></label>` : input('f-stock', 'Existencias actuales', 0, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}
+      ${input('f-minimo', 'Avisar cuando queden (mínimo)', x.minimo, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}
+      ${input('f-ubicacion', 'Ubicación en el taller', x.ubicacion, { attrs: 'placeholder="Ej: Estante B2"' })}
+      ${input('f-notas', 'Notas', x.notas, { area: true, span: true })}
+    </div><p class="muted" id="f-margen" style="margin:0;font-size:.88rem"></p><p class="err" id="f-err"></p>`,
+  `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar repuesto</button>`);
+  const margen = () => { const c = Number(val(sheet, 'f-costo')) || 0, p = Number(val(sheet, 'f-precio')) || 0;
+    $('#f-margen', sheet).textContent = c && p ? `Ganancia por ${val(sheet, 'f-unidad')}: ${money(p - c)} (${Math.round((p - c) / p * 100)} % del precio)` : ''; };
+  sheet.addEventListener('input', margen); margen();
+  $('[data-cancel]', sheet).onclick = () => (r ? showRepuesto(r.id) : closeSheet());
+  $('[data-save]', sheet).onclick = async (e) => {
+    const nombre = val(sheet, 'f-nombre');
+    if (!nombre) return void ($('#f-err').textContent = 'Escribe el nombre del repuesto.');
+    const d = { nombre, codigo: val(sheet, 'f-codigo'), categoria: val(sheet, 'f-categoria'), unidad: val(sheet, 'f-unidad'), proveedorId: val(sheet, 'f-proveedor'),
+      costo: r2(Math.max(0, Number(val(sheet, 'f-costo')) || 0)), precio: r2(Math.max(0, Number(val(sheet, 'f-precio')) || 0)),
+      minimo: Math.max(0, Number(val(sheet, 'f-minimo')) || 0), ubicacion: val(sheet, 'f-ubicacion'), notas: val(sheet, 'f-notas'), activo: true };
+    e.target.disabled = true;
+    try {
+      if (r) { await patch('repuestos', r.id, d); toast('Repuesto guardado'); showRepuesto(r.id); return; }
+      const stock = Math.max(0, Number(val(sheet, 'f-stock')) || 0), now = new Date().toISOString();
+      const ref = S.db.collection('repuestos').doc(), batch = S.db.batch();
+      batch.set(ref, { ...d, stock, creado: now });
+      if (stock) batch.set(S.db.collection('movimientos').doc(), { repuestoId: ref.id, tipo: 'entrada', cantidad: stock, costo: d.costo, fecha: now, por: S.myId || '', nota: 'Inventario inicial' });
+      await batch.commit();
+      upsertLocal('repuestos', { id: ref.id, ...d, stock, creado: now });
+      toast('Repuesto agregado'); showRepuesto(ref.id);
+    } catch (err) { $('#f-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+function showRepuesto(id) {
+  const draw = () => {
+    const r = repuesto(id);
+    if (!r) return; // may not have arrived from the server yet; the next snapshot redraws
+    const movs = S.movimientos.filter((m) => m.repuestoId === id).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const usos = movs.filter((m) => m.tipo === 'salida').reduce((s, m) => s + m.cantidad, 0);
+    const body = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="font-size:1.6rem;font-family:var(--font-display);font-weight:700">${esc(fmtCant(r.stock))} ${esc(r.unidad || '')}</span>${stockPill(r)}
+        ${bajoMinimo(r) ? `<span class="muted">Quedan pocos: el mínimo es ${esc(fmtCant(r.minimo))}.</span>` : ''}</div>
+      <dl class="dl"><dt>Código</dt><dd class="mono">${esc(r.codigo || '—')}</dd><dt>Categoría</dt><dd>${esc(r.categoria || '—')}</dd>
+        ${S.canDelete ? `<dt>Costo</dt><dd>${money(r.costo)}</dd>` : ''}<dt>Precio de venta</dt><dd class="strong">${money(r.precio)}</dd>
+        <dt>Proveedor</dt><dd>${esc(proveedor(r.proveedorId)?.nombre || '—')}</dd><dt>Ubicación</dt><dd>${esc(r.ubicacion || '—')}</dd>
+        <dt>Usados (historial)</dt><dd>${esc(fmtCant(usos))}</dd><dt>Notas</dt><dd>${esc(r.notas || '—')}</dd></dl>
+      <section class="panel"><div class="panel-pad" style="padding-bottom:0"><h2>Movimientos</h2></div>
+        ${movs.length ? `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th class="num">Cantidad</th>${S.canDelete ? '<th class="num">Costo</th>' : ''}<th>Detalle</th><th>Registró</th></tr></thead><tbody>
+          ${movs.map((m) => `<tr${m.ordenId ? ` class="row" data-open-order="${esc(m.ordenId)}"` : ''}><td class="muted">${fdate(m.fecha)}</td><td>${MOV_TIPOS[m.tipo] || esc(m.tipo)}</td>
+            <td class="num strong" style="color:var(${m.cantidad < 0 || m.tipo === 'salida' ? '--bad' : '--ok'})">${m.tipo === 'salida' ? '−' : m.cantidad < 0 ? '−' : '+'}${esc(fmtCant(Math.abs(m.cantidad)))}</td>
+            ${S.canDelete ? `<td class="num">${m.costo ? money(m.costo) : '—'}</td>` : ''}<td>${esc(m.nota || '')}</td><td class="muted">${esc(quien(m.por))}</td></tr>`).join('')}</tbody></table></div>`
+          : '<div class="empty"><span>Sin movimientos todavía.</span></div>'}</section>`;
+    const foot = S.canDelete ? `<button class="btn danger" data-del>Eliminar</button><button class="btn" data-ajuste>Ajustar existencias</button><button class="btn primary" data-edit>Editar</button>` : '';
+    const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
+    const s = existing || openSheet(r.nombre, body, foot, draw);
+    if (existing) $('.sheet-body', s).innerHTML = body;
+    if (!S.canDelete) return;
+    $('[data-edit]', s).onclick = () => editRepuesto(r);
+    $('[data-ajuste]', s).onclick = () => adjustStock(r);
+    $('[data-del]', s).onclick = async () => {
+      if (!(await ask(`¿Eliminar “${r.nombre}” del inventario? Su historial de movimientos se conserva.`))) return;
+      try { await patch('repuestos', id, { activo: false }); closeSheet(); toast('Repuesto eliminado'); } catch (err) { toast(dbErr(err)); }
+    };
+  };
+  sheetRefresh = null;
+  draw();
+}
+
+// Physical count: the difference becomes an "ajuste" movement.
+function adjustStock(r) {
+  const sheet = openSheet(`Ajustar existencias · ${r.nombre}`, `
+    <p class="muted" style="margin:0">Hoy el sistema tiene <strong>${esc(fmtCant(r.stock))} ${esc(r.unidad || '')}</strong>. Escribe cuántos hay realmente al contarlos.</p>
+    ${input('a-real', 'Cantidad contada', r.stock, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}
+    ${input('a-nota', 'Motivo', '', { attrs: 'placeholder="Ej: Conteo de fin de mes, pieza dañada"' })}<p class="err" id="a-err"></p>`,
+  `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar ajuste</button>`);
+  $('[data-cancel]', sheet).onclick = () => showRepuesto(r.id);
+  $('[data-save]', sheet).onclick = async (e) => {
+    const real = Number(val(sheet, 'a-real'));
+    if (!Number.isFinite(real) || real < 0) return void ($('#a-err').textContent = 'Escribe la cantidad contada.');
+    const diff = r2(real - Number(r.stock || 0));
+    if (!diff) { showRepuesto(r.id); return; }
+    e.target.disabled = true;
+    try {
+      const batch = S.db.batch();
+      batch.update(S.db.doc('repuestos/' + r.id), { stock: inc(diff) });
+      batch.set(S.db.collection('movimientos').doc(), { repuestoId: r.id, tipo: 'ajuste', cantidad: diff, costo: r.costo || 0, fecha: new Date().toISOString(), por: S.myId || '', nota: val(sheet, 'a-nota') || 'Conteo físico' });
+      await batch.commit(); toast('Existencias ajustadas'); showRepuesto(r.id);
+    } catch (err) { $('#a-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+// When an order is delivered, the parts on its quote leave the inventory (once).
+async function descontarInventario(o) {
+  const q = otQuote(o);
+  const items = (q?.items || []).filter((i) => i.repuestoId && repuesto(i.repuestoId) && Number(i.cantidad) > 0);
+  if (!items.length || o.inventarioDescontado) return;
+  const batch = S.db.batch(), now = new Date().toISOString();
+  for (const i of items) {
+    const r = repuesto(i.repuestoId);
+    batch.update(S.db.doc('repuestos/' + r.id), { stock: inc(-Number(i.cantidad)) });
+    batch.set(S.db.collection('movimientos').doc(), { repuestoId: r.id, tipo: 'salida', cantidad: Number(i.cantidad), costo: r.costo || 0, fecha: now, por: S.myId || '', ordenId: o.id, nota: `Orden ${o.numero}` });
+  }
+  batch.update(S.db.doc('ordenes/' + o.id), { inventarioDescontado: true });
+  await batch.commit();
+}
+
+function editCompra() {
+  const activos = S.repuestos.filter((r) => r.activo !== false).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  if (!activos.length) { toast('Primero agrega los repuestos al inventario.'); editRepuesto(null); return; }
+  const provOpts = [['', 'Sin proveedor'], ...S.proveedores.map((p) => [p.id, p.nombre])];
+  const repOpts = `<option value="">Elige el repuesto…</option>${activos.map((r) => `<option value="${esc(r.id)}">${esc(repLabel(r))}</option>`).join('')}`;
+  const row = () => `<tr><td style="min-width:200px"><select data-k="rep">${repOpts}</select></td><td class="c-qty"><input data-k="cant" class="num" type="number" min="0" step="0.01" value="1"></td>
+    <td class="c-price"><input data-k="costo" class="num" type="number" min="0" step="0.01" value=""></td><td class="num c-amt" data-amt></td><td><button class="btn ghost small" data-rm aria-label="Quitar línea">✕</button></td></tr>`;
+  const sheet = openSheet('Registrar compra de repuestos', `<div class="grid2">
+      ${select('c-prov', 'Proveedor', provOpts, '')}${input('c-fecha', 'Fecha', localDate(), { type: 'date' })}
+      ${input('c-factura', 'Número de factura (opcional)', '')}${select('c-metodo', 'Forma de pago', Object.entries(METODOS), 'efectivo')}</div>
+    <section><h3>Repuestos comprados</h3><div class="table-scroll"><table class="items"><thead><tr><th>Repuesto</th><th class="num c-qty">Cant.</th><th class="num c-price">Costo unit.</th><th class="num c-amt">Importe</th><th></th></tr></thead><tbody id="c-items">${row()}</tbody></table></div>
+      <div class="toolbar" style="margin-top:8px"><button class="btn small" data-add>+ Otra línea</button><button class="btn small ghost" data-new-rep>¿No está en la lista? Crear repuesto</button></div></section>
+    <div class="totals"><span class="grand">Total</span><span class="grand num" id="c-total">$0.00</span></div>
+    <p class="muted" style="margin:0;font-size:.88rem">Al guardar: suben las existencias, se actualiza el costo de cada repuesto y la compra queda anotada en Gastos.</p><p class="err" id="c-err"></p>`,
+  `<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar compra</button>`);
+  const tbody = $('#c-items', sheet);
+  const lines = () => $$('tr', tbody).map((tr) => ({ tr, r: repuesto($('[data-k=rep]', tr).value), cant: Number($('[data-k=cant]', tr).value) || 0, costo: r2(Number($('[data-k=costo]', tr).value) || 0) }));
+  const recalc = () => { let t = 0; lines().forEach((l) => { const a = l.cant * l.costo; t += a; $('[data-amt]', l.tr).textContent = money(a); }); $('#c-total', sheet).textContent = money(t); };
+  tbody.addEventListener('change', (e) => { const sel = e.target.closest('[data-k=rep]'); if (sel) { const r = repuesto(sel.value), c = $('[data-k=costo]', sel.closest('tr')); if (r && !c.value) c.value = r.costo || ''; recalc(); } });
+  tbody.addEventListener('click', (e) => { if (e.target.closest('[data-rm]')) { e.target.closest('tr').remove(); recalc(); } });
+  sheet.addEventListener('input', recalc);
+  $('[data-add]', sheet).onclick = () => tbody.insertAdjacentHTML('beforeend', row());
+  $('[data-new-rep]', sheet).onclick = () => editRepuesto(null);
+  $('[data-cancel]', sheet).onclick = closeSheet;
+  recalc();
+  $('[data-save]', sheet).onclick = async (e) => {
+    const ls = lines().filter((l) => l.r && l.cant > 0);
+    if (!ls.length) return void ($('#c-err').textContent = 'Agrega al menos un repuesto con cantidad.');
+    const total = r2(ls.reduce((s, l) => s + l.cant * l.costo, 0)), prov = proveedor(val(sheet, 'c-prov')), factura = val(sheet, 'c-factura');
+    e.target.disabled = true;
+    try {
+      const batch = S.db.batch(), now = new Date().toISOString(), gasto = S.db.collection('gastos').doc();
+      batch.set(gasto, { fecha: val(sheet, 'c-fecha') || localDate(), categoria: 'Repuestos (compras)', descripcion: `Compra${factura ? ` factura ${factura}` : ''}${prov ? ` · ${prov.nombre}` : ''}`,
+        monto: total, metodo: val(sheet, 'c-metodo'), proveedorId: prov?.id || '', items: ls.map((l) => ({ repuestoId: l.r.id, nombre: l.r.nombre, cantidad: l.cant, costo: l.costo })), por: S.myId || '', creada: now });
+      for (const l of ls) {
+        batch.update(S.db.doc('repuestos/' + l.r.id), { stock: inc(l.cant), ...(l.costo ? { costo: l.costo } : {}) });
+        batch.set(S.db.collection('movimientos').doc(), { repuestoId: l.r.id, tipo: 'entrada', cantidad: l.cant, costo: l.costo, fecha: now, por: S.myId || '', gastoId: gasto.id, nota: `Compra${factura ? ` ${factura}` : ''}${prov ? ` · ${prov.nombre}` : ''}` });
+      }
+      await batch.commit();
+      closeSheet(); toast(`Compra de ${money(total)} registrada`);
+    } catch (err) { $('#c-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+}
+
+function showProveedores() {
+  const draw = () => {
+    const list = [...S.proveedores].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const body = list.length ? list.map((p) => {
+      const faltan = S.repuestos.filter((r) => r.proveedorId === p.id && bajoMinimo(r));
+      const msg = `Hola ${p.contacto || p.nombre}, le saluda ${S.config.nombre}. Quisiera hacer un pedido:\n\n${faltan.map((r) => `• ${repLabel(r)}: ${fmtCant(Math.max(1, Number(r.minimo) * 2 - Number(r.stock || 0)))} ${r.unidad || ''}`).join('\n')}\n\n¿Me confirma precio y disponibilidad? Gracias.`;
+      return `<div class="mant"><button class="cita-main" data-edit-prov="${esc(p.id)}"><span class="cita-info"><strong>${esc(p.nombre)}</strong><span class="muted">${esc([p.contacto, p.telefono].filter(Boolean).join(' · ') || 'Sin datos de contacto')}</span></span>
+        ${faltan.length ? `<span class="pill st-vencida">${faltan.length} por agotarse</span>` : ''}</button>
+        ${faltan.length && p.telefono ? `<div class="toolbar"><a class="btn small ok" target="_blank" rel="noopener" href="https://wa.me/${digits(p.telefono)}?text=${encodeURIComponent(msg)}">Pedir por WhatsApp</a></div>` : ''}</div>`;
+    }).join('') : '<div class="empty"><span>Todavía no hay proveedores. Agrega a quienes te venden repuestos.</span></div>';
+    const existing = sheetRefresh === draw ? $('#layer .sheet') : null;
+    const s = existing || openSheet('Proveedores', body, '<button class="btn" data-cancel>Cerrar</button><button class="btn primary" data-new-prov>+ Proveedor</button>', draw);
+    if (existing) $('.sheet-body', s).innerHTML = body;
+    $('[data-cancel]', s).onclick = closeSheet;
+    $('[data-new-prov]', s).onclick = () => editProveedor(null);
+    $$('[data-edit-prov]', s).forEach((b) => b.onclick = () => editProveedor(proveedor(b.dataset.editProv)));
+  };
+  sheetRefresh = null;
+  draw();
+}
+function editProveedor(p) {
+  const x = p || {};
+  const sheet = openSheet(p ? 'Editar proveedor' : 'Nuevo proveedor', `<div class="grid2">
+      ${input('p-nombre', 'Nombre', x.nombre, { req: true, span: true, attrs: 'placeholder="Ej: Repuestos El Pino"' })}
+      ${input('p-contacto', 'Persona de contacto', x.contacto)}${input('p-telefono', 'WhatsApp (con código de país)', x.telefono, { type: 'tel', attrs: 'placeholder="503 7000 0000"' })}
+      ${input('p-notas', 'Notas', x.notas, { area: true, span: true, attrs: 'placeholder="Ej: Entrega a domicilio, crédito a 30 días"' })}</div><p class="err" id="p-err"></p>`,
+  `${p ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar</button>`);
+  $('[data-cancel]', sheet).onclick = showProveedores;
+  $('[data-save]', sheet).onclick = async (e) => {
+    const nombre = val(sheet, 'p-nombre');
+    if (!nombre) return void ($('#p-err').textContent = 'Escribe el nombre del proveedor.');
+    e.target.disabled = true;
+    try { await save('proveedores', p?.id, { nombre, contacto: val(sheet, 'p-contacto'), telefono: val(sheet, 'p-telefono'), notas: val(sheet, 'p-notas') }); toast('Proveedor guardado'); showProveedores(); }
+    catch (err) { $('#p-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+  if (p) $('[data-del]', sheet).onclick = async () => {
+    if (!(await ask(`¿Eliminar al proveedor ${p.nombre}?`))) return;
+    try { await remove('proveedores', p.id); toast('Proveedor eliminado'); showProveedores(); } catch (err) { toast(dbErr(err)); }
+  };
+}
+
+// ---------- Expenses (only administration and reception see them) ----------
+function editGasto(g) {
+  const x = g || { fecha: localDate(), categoria: 'Renta', metodo: 'efectivo' };
+  const compra = Boolean(g?.items?.length);
+  const sheet = openSheet(g ? 'Gasto' : 'Registrar gasto', `<div class="grid2">
+      ${input('g-fecha', 'Fecha', x.fecha, { type: 'date' })}${select('g-cat', 'Categoría', GASTO_CATS.map((c) => [c, c]), x.categoria)}
+      ${input('g-desc', 'Descripción', x.descripcion, { span: true, attrs: 'placeholder="Ej: Renta de noviembre"' })}
+      ${input('g-monto', 'Monto', x.monto, { type: 'number', attrs: 'min="0" step="0.01" inputmode="decimal"' })}${select('g-metodo', 'Forma de pago', Object.entries(METODOS), x.metodo)}</div>
+    ${compra ? `<section><h3>Repuestos de esta compra</h3><ul style="margin:0;padding-left:18px">${g.items.map((i) => `<li>${esc(i.nombre)}: ${esc(fmtCant(i.cantidad))} × ${money(i.costo)}</li>`).join('')}</ul>
+      <p class="muted" style="font-size:.88rem">Si borras esta compra, las existencias no cambian solas; corrígelas con “Ajustar existencias”.</p></section>` : ''}<p class="err" id="g-err"></p>`,
+  `${g ? '<button class="btn danger" data-del>Eliminar</button>' : ''}<button class="btn" data-cancel>Cancelar</button><button class="btn primary" data-save>Guardar gasto</button>`);
+  $('[data-cancel]', sheet).onclick = closeSheet;
+  $('[data-save]', sheet).onclick = async (e) => {
+    const monto = r2(Number(val(sheet, 'g-monto')) || 0);
+    if (monto <= 0) return void ($('#g-err').textContent = 'Escribe el monto del gasto.');
+    e.target.disabled = true;
+    try {
+      const d = { fecha: val(sheet, 'g-fecha') || localDate(), categoria: val(sheet, 'g-cat'), descripcion: val(sheet, 'g-desc'), monto, metodo: val(sheet, 'g-metodo') };
+      if (g) await patch('gastos', g.id, d); else await save('gastos', null, { ...d, por: S.myId || '', creada: new Date().toISOString() });
+      closeSheet(); toast('Gasto guardado');
+    } catch (err) { $('#g-err').textContent = dbErr(err); e.target.disabled = false; }
+  };
+  if (g) $('[data-del]', sheet).onclick = async () => {
+    if (!(await ask(`¿Eliminar el gasto de ${money(g.monto)}?`))) return;
+    try { await remove('gastos', g.id); closeSheet(); toast('Gasto eliminado'); } catch (err) { toast(dbErr(err)); }
+  };
+}
+// Profit panel for the Reports view: what came in, what went out, and where it went.
+function financePanel(mes, cobrado) {
+  const gs = S.gastos.filter((g) => (g.fecha || '').slice(0, 7) === mes).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  const total = r2(gs.reduce((s, g) => s + (Number(g.monto) || 0), 0)), ganancia = r2(cobrado - total);
+  const porCat = GASTO_CATS.map((c) => [c, r2(gs.filter((g) => g.categoria === c).reduce((s, g) => s + g.monto, 0))]).filter(([, v]) => v).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...porCat.map(([, v]) => v));
+  const costoRep = r2(S.movimientos.filter((m) => m.tipo === 'salida' && localMonth(m.fecha) === mes).reduce((s, m) => s + m.cantidad * (m.costo || 0), 0));
+  return `<section class="panel panel-pad" style="margin-bottom:16px;display:flex;flex-direction:column;gap:14px">
+    <div class="head" style="margin:0"><h2>Ganancia del mes</h2><div class="toolbar"><button class="btn small" data-act="new-compra">Registrar compra</button><button class="btn small primary" data-act="new-gasto">+ Registrar gasto</button></div></div>
+    <div class="stats" style="margin:0">
+      <div class="stat"><span class="label">Entró (cobrado)</span><span class="value" style="font-size:1.5rem">${money(cobrado)}</span></div>
+      <div class="stat"><span class="label">Salió (gastos)</span><span class="value" style="font-size:1.5rem">${money(total)}</span><span class="muted" style="font-size:.82rem">${gs.length} gasto${gs.length === 1 ? '' : 's'}</span></div>
+      <div class="stat hl"><span class="label">Ganancia</span><span class="value" style="font-size:1.5rem;color:var(${ganancia < 0 ? '--bad' : '--ok'})">${money(ganancia)}</span></div>
+      <div class="stat"><span class="label">Costo de repuestos usados</span><span class="value" style="font-size:1.5rem">${money(costoRep)}</span><span class="muted" style="font-size:.82rem">en órdenes entregadas</span></div></div>
+    <div class="two-col"><div>${gs.length ? `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Pago</th><th class="num">Monto</th></tr></thead><tbody>
+        ${gs.map((g) => `<tr class="row" data-open-gasto="${esc(g.id)}"><td class="muted">${fdate(g.fecha)}</td><td>${esc(g.categoria)}</td><td>${esc(g.descripcion || '')}</td><td class="muted">${METODOS[g.metodo] || esc(g.metodo || '')}</td><td class="num strong">${money(g.monto)}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="empty"><span>No hay gastos registrados en este mes. Anota renta, luz, sueldos, compras… para ver tu ganancia real.</span></div>'}</div>
+      <div><h3>Gastos por categoría</h3>${porCat.length ? `<div class="bars">${porCat.map(([c, v]) => `<div class="bar-row"><span>${esc(c)}</span><span class="num">${money(v)}</span><div class="bar"><i style="width:${Math.max(3, v / max * 100)}%"></i></div></div>`).join('')}</div>` : '<p class="muted" style="margin:0">Sin gastos.</p>'}</div></div>
+  </section>`;
 }
 
 // ---------- Data ----------
@@ -2579,11 +2910,12 @@ function onData() {
   }
 }
 let unsubs = [];
-function subscribe(col, key, sort) {
-  unsubs.push(S.db.collection(col).limit(1000).onSnapshot((snap) => {
+function subscribe(col, key, sort, newestBy) {
+  const ref = S.db.collection(col);
+  unsubs.push((newestBy ? ref.orderBy(newestBy, 'desc') : ref).limit(1000).onSnapshot((snap) => {
     S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(sort);
     S.loaded.add(key);
-    S.ready = S.loaded.size >= 7;
+    S.ready = ['clientes', 'vehiculos', 'cotizaciones', 'personal', 'ordenes'].every((k) => S.loaded.has(k));
     onData();
   }, (err) => toast(dbErr(err))));
 }
@@ -2733,6 +3065,10 @@ async function enter(u) {
   subscribe('ordenes', 'ordenes', (a, b) => (b.creada || '').localeCompare(a.creada || ''));
   subscribe('citas', 'citas', (a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
   subscribe('paquetes', 'paquetes', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  subscribe('repuestos', 'repuestos', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  subscribe('proveedores', 'proveedores', (a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  subscribe('movimientos', 'movimientos', (a, b) => (b.fecha || '').localeCompare(a.fecha || ''), 'fecha');
+  if (S.canDelete) subscribe('gastos', 'gastos', (a, b) => (b.fecha || '').localeCompare(a.fecha || ''), 'fecha');
   unsubs.push(S.db.collection('publicas').where('estado', 'in', ['aprobada', 'rechazada']).onSnapshot((snap) => {
     S.respuestas = new Map(snap.docs.map((d) => [d.id, d.data()]));
     applyResponses();
@@ -2759,7 +3095,7 @@ async function start() {
   if (publico !== null) { showPublic(/^[A-Za-z0-9_-]{8,64}$/.test(publico) ? publico : ''); return; }
   firebase.auth().onAuthStateChanged(async (u) => {
     unsubs.forEach((f) => f()); unsubs = [];
-    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [], me: null, myId: null, ready: false });
+    Object.assign(S, { clientes: [], vehiculos: [], cotizaciones: [], personal: [], ordenes: [], citas: [], paquetes: [], repuestos: [], movimientos: [], proveedores: [], gastos: [], me: null, myId: null, ready: false });
     S.respuestas = new Map();
     S.loaded = new Set();
     if (u) { if (!settingUp) await enter(u); return; }

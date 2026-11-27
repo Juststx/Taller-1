@@ -4,3 +4,6 @@ data/
 *.db-journal
 .env
 __pycache__/
+web/firebase/pruebas/salida/
+web/firebase/taller.zip
+*-debug.log
