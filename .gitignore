@@ -1,0 +1,9 @@
+node_modules/
+data/
+*.db
+*.db-journal
+.env
+__pycache__/
+web/firebase/pruebas/salida/
+web/firebase/taller.zip
+*-debug.log

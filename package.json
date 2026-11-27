@@ -1,0 +1,20 @@
+{
+  "name": "taller-1",
+  "version": "1.0.0",
+  "description": "Gestión de taller mecánico: usuarios, clientes, vehículos y cotizaciones",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.3.0",
+    "nodemailer": "^7.0.13"
+  }
+}

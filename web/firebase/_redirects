@@ -1,0 +1,2 @@
+# Enlace corto de las cotizaciones: /q/<código> muestra la página del cliente.
+/q/*  /index.html  200

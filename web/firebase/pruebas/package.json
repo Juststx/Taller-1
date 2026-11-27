@@ -1,0 +1,16 @@
+{
+  "name": "taller-pruebas",
+  "private": true,
+  "description": "Pruebas automáticas de la web del taller contra el emulador de Firebase (no tocan el proyecto real).",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore,auth --project demo-taller \"node --test --test-concurrency=1 *.test.js\"",
+    "capturas": "firebase emulators:exec --only firestore,auth --project demo-taller \"node capturas.js\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase": "13.0.0",
+    "firebase-tools": "15.34.1",
+    "firebase-compat-10": "npm:firebase@10.12.2",
+    "jspdf": "2.5.1"
+  }
+}
